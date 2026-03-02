@@ -451,7 +451,9 @@ const App: React.FC = () => {
         setIsGeneratingReply(true);
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+            if (!apiKey) throw new Error("API key non configurée");
+            const ai = new GoogleGenAI({ apiKey });
 
             const systemInstruction = `Tu es un assistant expert pour iServices France.
         Ta mission est de rédiger une réponse email parfaite.
@@ -509,7 +511,9 @@ const App: React.FC = () => {
         setIsGeneratingReply(true);
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+            if (!apiKey) throw new Error("API key non configurée");
+            const ai = new GoogleGenAI({ apiKey });
             const systemInstruction = `Tu es un correcteur orthographique. Corrige uniquement les fautes. Ne change pas le sens, n'ajoute pas de prix, ne mets pas de markdown.`;
             const response = await ai.models.generateContent({
                 model: 'gemini-3-flash-preview',
@@ -597,8 +601,10 @@ const App: React.FC = () => {
         setGuideResponse(null);
 
         try {
-            // Using the user-provided API key directly
-            const ai = new GoogleGenAI({ apiKey: "AIzaSyAW7lKVv21rvoEkks5Szj5nlF_jYqYEQXg" });
+            // Using the user-provided API key from .env
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+            if (!apiKey) throw new Error("Veuillez configurer VITE_GEMINI_API_KEY dans le fichier .env");
+            const ai = new GoogleGenAI({ apiKey });
             const systemInstruction = `Tu es un assistant virtuel expert pour les employés d'iServices. 
         Ta mission est de répondre aux questions en te basant UNIQUEMENT sur le contexte fourni.
         
