@@ -107,7 +107,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeCategory
                                     onClick={() => {
                                         onSelectCategory(item.id as ProcedureCategory);
                                     }}
-                                    className={`relative flex items-center justify-center gap-2 px-3 lg:px-5 py-2 lg:py-3 text-xs lg:text-sm font-tech uppercase tracking-widest transition-colors z-10 pointer-events-auto ${isActive
+                                    className={`relative flex items-center justify-center gap-2 px-4 lg:px-5 py-3 lg:py-3 text-[14px] lg:text-sm font-tech uppercase tracking-widest transition-colors z-10 pointer-events-auto ${isActive
                                         ? 'text-white font-bold drop-shadow-md'
                                         : 'text-neutral-500 hover:text-black dark:hover:text-white font-medium'
                                         }`}
@@ -120,7 +120,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeCategory
                                         />
                                     )}
                                     <motion.div animate={{ scale: isActive ? 1.15 : 1 }} transition={{ type: "spring", bounce: 0.4 }}>
-                                        <item.icon className="text-lg mb-0.5" />
+                                        <item.icon className="text-xl lg:text-lg mb-0.5" />
                                     </motion.div>
                                     <span className="hidden xl:block">{item.label}</span>
                                 </button>
@@ -129,7 +129,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeCategory
                     </nav>
 
                     {/* Expandable Search Bubble */}
-                    <div className="relative flex items-start justify-end h-10 lg:h-12 w-12 lg:w-[48px] shrink-0 z-50 pointer-events-auto">
+                    <div className="relative flex items-start justify-end h-12 lg:h-12 w-12 lg:w-[48px] shrink-0 z-50 pointer-events-auto">
                         <div
                             style={{
                                 width: isSearchExpanded ? ((guideResponse || isThinking) ? (window.innerWidth < 768 ? window.innerWidth - 24 : 500) : (window.innerWidth < 768 ? 300 : 250)) : 48,
@@ -146,7 +146,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeCategory
                                     className={`absolute left-0 w-12 h-12 flex items-center justify-center transition-colors z-20 pointer-events-auto ${!isSearchExpanded ? 'cursor-pointer hover:bg-white/20 dark:hover:bg-[#222]/20' : 'cursor-default'}`}
                                     aria-label="Search"
                                 >
-                                    <FaMagnifyingGlass className={`text-lg transition-colors duration-300 ${isSearchExpanded ? 'text-orange-600' : 'text-neutral-500 hover:text-orange-600'}`} />
+                                    <FaMagnifyingGlass className={`text-xl lg:text-lg transition-colors duration-300 ${isSearchExpanded ? 'text-orange-600' : 'text-neutral-500 hover:text-orange-600'}`} />
                                 </button>
 
                                 <form onSubmit={(e) => { e.preventDefault(); if (isSearchExpanded && searchQuery.trim()) onAskGemini(e); }} className="w-full h-full relative">
