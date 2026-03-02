@@ -1,0 +1,356 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <title>iServices Task</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        tech: ['Share Tech Mono', 'monospace'],
+                    },
+                    caretColor: {
+                        orange: '#ea580c',
+                    }
+                }
+            }
+        }
+    </script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f5f5f5;
+            --dot-color: #e5e5e5;
+            --scroll-track: #f5f5f5;
+            --scroll-thumb: #d4d4d4;
+            --nothing-accent: #ea580c;
+        }
+
+        .dark {
+            --bg-color: #000000;
+            --dot-color: #262626;
+            --scroll-track: #000000;
+            --scroll-thumb: #404040;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: #171717;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dark body {
+            color: #e5e5e5;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .font-tech {
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Input Block Cursor Style */
+        input,
+        textarea {
+            caret-color: #ea580c;
+        }
+
+        /* Nothing Dot Pattern Dynamic */
+        .bg-dots {
+            background-image: radial-gradient(var(--dot-color) 1.5px, transparent 1.5px);
+            background-size: 20px 20px;
+        }
+
+        /* Technical Grid Pattern for Cards */
+        .bg-grid-pattern {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(100, 100, 100, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(100, 100, 100, 0.1) 1px, transparent 1px);
+        }
+
+        /* Custom Scrollbar - Minimal */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--scroll-track);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--scroll-thumb);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--nothing-accent);
+        }
+
+        /* Animations */
+        @keyframes scanline {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0.1;
+            }
+
+            50% {
+                opacity: 0.2;
+            }
+
+            100% {
+                transform: translateY(100%);
+                opacity: 0.1;
+            }
+        }
+
+        @keyframes glitch-cyberpunk {
+            0% {
+                clip-path: inset(0 0 0 0);
+                transform: translate(0) skew(0);
+                filter: none;
+            }
+
+            20% {
+                clip-path: inset(20% 0 60% 0);
+                transform: translate(-10px, 5px) skew(20deg);
+                filter: drop-shadow(5px 0 0 #ea580c) saturate(300%) contrast(1.5);
+            }
+
+            40% {
+                clip-path: inset(60% 0 10% 0);
+                transform: translate(10px, -5px) skew(-10deg);
+                filter: drop-shadow(-5px 0 0 #ffffff) invert(1) brightness(2);
+            }
+
+            60% {
+                clip-path: inset(40% 0 40% 0);
+                transform: translate(-10px, 0) scale(1.1);
+                filter: brightness(1.5) drop-shadow(4px 4px 0 #ea580c);
+            }
+
+            80% {
+                clip-path: inset(10% 0 80% 0);
+                transform: translate(5px, 5px) skew(10deg);
+                filter: drop-shadow(-2px -2px 0 #000) grayscale(1);
+            }
+
+            100% {
+                clip-path: inset(0 0 0 0);
+                transform: translate(0) skew(0);
+                filter: none;
+            }
+        }
+
+        .glitch-active {
+            animation: glitch-cyberpunk 0.2s steps(4) both;
+        }
+
+        .scanline-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.02), transparent);
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* Water Drop Effect */
+        @keyframes water-drop-ripple {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.4);
+            }
+
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 0 0 10px rgba(234, 88, 12, 0);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(234, 88, 12, 0);
+            }
+        }
+
+        .animate-water-drop {
+            animation: water-drop-ripple 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* Liquid Glass Bubble Morphing */
+        @keyframes morph {
+            0% {
+                border-radius: 40px 50px 40px 50px / 50px 40px 50px 40px;
+            }
+
+            50% {
+                border-radius: 50px 40px 50px 40px / 40px 50px 40px 50px;
+            }
+
+            100% {
+                border-radius: 40px 50px 40px 50px / 50px 40px 50px 40px;
+            }
+        }
+
+        .liquid-morph {
+            animation: morph 4s ease-in-out infinite;
+        }
+
+        .dark .scanline-overlay {
+            display: block;
+        }
+
+        /* Theme Transition using View Transitions API */
+        .theme-transition::view-transition-group(root) {
+            animation-duration: 0.8s;
+        }
+
+        .theme-transition::view-transition-old(root),
+        .theme-transition::view-transition-new(root) {
+            animation: none;
+            mix-blend-mode: normal;
+            display: block;
+        }
+
+        /* When transitioning TO dark mode: new state (dark) is on top and expands */
+        .theme-transition.dark::view-transition-old(root) {
+            z-index: 1;
+        }
+
+        .theme-transition.dark::view-transition-new(root) {
+            z-index: 2;
+        }
+
+        /* When transitioning TO light mode: old state (dark) is on top and shrinks */
+        .theme-transition:not(.dark)::view-transition-new(root) {
+            z-index: 1;
+        }
+
+        .theme-transition:not(.dark)::view-transition-old(root) {
+            z-index: 2;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* =========================================
+         GLOBAL ELASTIC BUTTON SYSTEM 
+         ========================================= */
+        button:not(.elastic-group button),
+        .elastic-group {
+            /* Define local CSS variables for transform mapping. 
+           Fallbacks ensure normal state is 0/1 */
+            translate: var(--elastic-x, 0px) var(--elastic-y, 0px);
+            scale: var(--elastic-scale, 1);
+
+            /* The bounce transition for release state */
+            /* Overrides tailwind transition-all for transform properties via !important */
+            transition: translate 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                scale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                max-height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+                border-radius 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                backdrop-filter 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            will-change: transform, translate, scale;
+        }
+
+        button.is-elastic-dragging:not(.elastic-group button),
+        .elastic-group.is-elastic-dragging {
+            /* When dragging, remove translation delay for instant follow tracking, 
+           while keeping scale animation smooth but fast */
+            transition: translate 0.05s linear,
+                scale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                max-height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+                border-radius 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                backdrop-filter 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* =========================================
+         GLOBAL PRINT LAYOUT FIX (80mm Receipt)
+         ========================================= */
+        @media print {
+            @page {
+                size: 80mm 2000mm;
+                margin: 0;
+            }
+
+            body {
+                width: 80mm;
+                /* Standard 80mm roll width is about 302px */
+                max-width: 80mm;
+                margin: 0 auto;
+                background-color: white !important;
+                color: black !important;
+                font-size: 12px;
+                /* Base font size for receipt */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            html,
+            body,
+            #root,
+            .h-screen,
+            .h-full,
+            .overflow-hidden,
+            .overflow-y-auto,
+            .overflow-x-hidden,
+            .flex-1,
+            main {
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+                position: static !important;
+                display: block !important;
+                flex: none !important;
+                box-sizing: border-box !important;
+            }
+        }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "react-icons/": "https://esm.sh/react-icons@^5.5.0/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+    "motion/react": "https://esm.sh/motion@12.34.3/react",
+    "recharts": "https://esm.sh/recharts@3.7.0"
+  }
+}
+</script>
+</head>
+
+<body
+    class="bg-dots min-h-screen overflow-hidden selection:bg-orange-600 selection:text-white print:overflow-visible print:h-auto print:min-h-0">
+    <div class="scanline-overlay hidden dark:block"></div>
+    <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
+</body>
+
+</html>
