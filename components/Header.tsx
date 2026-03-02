@@ -142,29 +142,34 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeCategory
                             {/* Input Row */}
                             <div className="flex items-center w-full h-12 shrink-0 relative">
                                 <button
-                                    onClick={() => !isSearchExpanded && setIsSearchExpanded(true)}
+                                    onClick={() => {
+                                        if (!isSearchExpanded) {
+                                            setIsSearchExpanded(true);
+                                            setTimeout(() => searchInputRef.current?.focus(), 50);
+                                        }
+                                    }}
                                     className={`absolute left-0 w-12 h-12 flex items-center justify-center transition-colors z-20 pointer-events-auto ${!isSearchExpanded ? 'cursor-pointer hover:bg-white/20 dark:hover:bg-[#222]/20' : 'cursor-default'}`}
                                     aria-label="Search"
                                 >
                                     <FaMagnifyingGlass className={`text-xl lg:text-lg transition-colors duration-300 ${isSearchExpanded ? 'text-orange-600' : 'text-neutral-500 hover:text-orange-600'}`} />
                                 </button>
 
-                                <form onSubmit={(e) => { e.preventDefault(); if (isSearchExpanded && searchQuery.trim()) onAskGemini(e); }} className="w-full h-full relative">
+                                <form onSubmit={(e) => { e.preventDefault(); if (isSearchExpanded && searchQuery.trim()) onAskGemini(e); }} className="w-full h-full relative flex items-center">
                                     <input
                                         ref={searchInputRef}
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder="Recherche & IA..."
-                                        className={`w-full h-full pl-12 pr-20 bg-transparent outline-none text-sm dark:text-white font-tech tracking-wider placeholder:text-neutral-400 absolute left-0 pointer-events-auto transition-opacity duration-300 ${isSearchExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                                        className={`w-full h-full pl-12 pr-20 bg-transparent outline-none text-[15px] dark:text-white font-tech tracking-wider placeholder:text-neutral-400 absolute left-0 flex items-center pt-[2px] pointer-events-auto transition-opacity duration-300 ${isSearchExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                                     />
                                     <button
                                         type="submit"
                                         disabled={isThinking || !searchQuery.trim()}
-                                        className={`absolute right-10 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-white bg-orange-600 hover:bg-orange-500 disabled:opacity-50 transition-all duration-300 z-20 ${isSearchExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'}`}
+                                        className={`absolute right-10 p-2 rounded-full text-white bg-orange-600 hover:bg-orange-500 disabled:opacity-50 transition-all duration-300 z-20 flex items-center justify-center ${isSearchExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-0 pointer-events-none'}`}
                                         title="Assistant IA"
                                     >
-                                        <FaWandMagicSparkles className="text-xs" />
+                                        <FaWandMagicSparkles className="text-[14px]" />
                                     </button>
                                 </form>
 
@@ -173,9 +178,9 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeCategory
                                         setIsSearchExpanded(false);
                                         setSearchQuery('');
                                     }}
-                                    className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full pointer-events-auto dark:hover:bg-neutral-800 hover:bg-neutral-200 transition-all duration-300 z-20 ${isSearchExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'}`}
+                                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full pointer-events-auto dark:hover:bg-neutral-800 hover:bg-neutral-200 transition-all duration-300 z-20 flex items-center justify-center ${isSearchExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-0 pointer-events-none'}`}
                                 >
-                                    <FaXmark className="text-neutral-500" />
+                                    <FaXmark className="text-neutral-500 text-[18px]" />
                                 </button>
                             </div>
 
