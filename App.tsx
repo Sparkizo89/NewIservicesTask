@@ -177,6 +177,26 @@ const App: React.FC = () => {
     // Theme State (Default to Light)
     const [isDarkMode, setIsDarkMode] = useState(false);
 
+    // Pinned Procedures State
+    const [pinnedProcedures, setPinnedProcedures] = useState<string[]>(() => {
+        try {
+            const cached = localStorage.getItem('iservices_pinned_procedures');
+            return cached ? JSON.parse(cached) : [];
+        } catch {
+            return [];
+        }
+    });
+
+    const togglePin = (procedureId: string) => {
+        setPinnedProcedures(prev => {
+            const newPinned = prev.includes(procedureId)
+                ? prev.filter(id => id !== procedureId)
+                : [...prev, procedureId];
+            localStorage.setItem('iservices_pinned_procedures', JSON.stringify(newPinned));
+            return newPinned;
+        });
+    };
+
     // Mailbox State - Initialisation avec Cache LocalStorage pour vitesse instantanée
     const [emails, setEmails] = useState<Email[]>(() => {
         try {
@@ -336,14 +356,25 @@ const App: React.FC = () => {
 
     const filteredProcedures = useMemo(() => {
         if (activeCategory === 'contacts' || activeCategory === 'mailbox' || activeCategory === 'qualirepar' || activeCategory === 'intake') return [];
-        return procedures.filter(p => {
+        let filtered = procedures.filter(p => {
             const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
             const matchesSearch =
                 p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 p.code.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesCategory && matchesSearch;
         });
-    }, [activeCategory, searchQuery]);
+
+        // Tri : Les procédures épinglées remontent en haut de la liste
+        filtered.sort((a, b) => {
+            const isAPinned = pinnedProcedures.includes(a.id);
+            const isBPinned = pinnedProcedures.includes(b.id);
+            if (isAPinned && !isBPinned) return -1;
+            if (!isAPinned && isBPinned) return 1;
+            return 0;
+        });
+
+        return filtered;
+    }, [activeCategory, searchQuery, pinnedProcedures]);
 
     const filteredContacts = useMemo(() => {
         if (activeCategory !== 'contacts') return [];
@@ -1017,6 +1048,8 @@ const App: React.FC = () => {
                         key={p.id}
                         procedure={p}
                         onClick={setSelectedProcedure}
+                        isPinned={pinnedProcedures.includes(p.id)}
+                        onTogglePin={() => togglePin(p.id)}
                     />
                 ))}
                 {filteredProcedures.length === 0 && (

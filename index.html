@@ -287,25 +287,11 @@
         }
 
         /* =========================================
-         GLOBAL PRINT LAYOUT FIX (80mm Receipt)
+         GLOBAL PRINT LAYOUT FIX 
          ========================================= */
         @media print {
             @page {
-                size: 80mm 2000mm;
                 margin: 0;
-            }
-
-            body {
-                width: 80mm;
-                /* Standard 80mm roll width is about 302px */
-                max-width: 80mm;
-                margin: 0 auto;
-                background-color: white !important;
-                color: black !important;
-                font-size: 12px;
-                /* Base font size for receipt */
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
             }
 
             html,

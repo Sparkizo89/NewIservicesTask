@@ -224,6 +224,16 @@ const Modal: React.FC<ModalProps> = ({ procedure, onClose, onShowToast }) => {
                 bodyText += `- ${item.contenu || "-"}${qtyStr}${fileStr}\n`;
             });
             bodyText += `\nMerci d'avance.\nCordialement.`;
+        } else if (procedure.id === 'conf_recep_recond') {
+            bodyText = `Bonjour,\n\nStock OK\n\n`;
+            rows.forEach(item => {
+                bodyText += `Référence : ${item.ref || "-"}\n`;
+                if (item.desc_optionnel) {
+                    bodyText += `Description : ${item.desc_optionnel}\n`;
+                }
+                if (item._fileName) bodyText += `[Pièce jointe : ${item._fileName}]\n`;
+                bodyText += `\n`;
+            });
         } else {
             const actionTitle = (procedure.id === 'sort' && usageMagasin) ? 'USAGE INTERNE' : procedure.title;
             bodyText = `Bonjour,\n\nAction : ${actionTitle}\n\n`;
@@ -261,6 +271,9 @@ const Modal: React.FC<ModalProps> = ({ procedure, onClose, onShowToast }) => {
         let subject = procedure.customSubject || `${procedure.code} - ${procedure.title}`;
         if (usageMagasin) subject = "SAI";
         else if (procedure.id === 'sort') subject = "SORT";
+        else if (procedure.id === 'conf_recep_recond') {
+            subject = `Confirmation stock ${rows[0]?.ref || ''}`;
+        }
 
         const storeName = staticData.magasin || staticData.exp || staticData.magasin_cc || "iServices";
         subject = `[${storeName}] ${subject}`;

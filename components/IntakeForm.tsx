@@ -5,9 +5,10 @@ import {
     FaFileInvoice, FaDroplet,
     FaRotateLeft, FaScrewdriverWrench, FaBan, FaPen,
     FaPrint, FaEnvelope, FaFingerprint, FaCamera,
-    FaBatteryFull, FaMobileScreen, FaCube, FaVial, FaXmark, FaCheck, FaPaperPlane, FaSpinner
+    FaBatteryFull, FaMobileScreen, FaCube, FaVial, FaXmark, FaCheck, FaPaperPlane, FaSpinner,
+    FaFloppyDisk, FaListUl, FaTrash, FaPhone
 } from 'react-icons/fa6';
-import { FaEuroSign, FaBarcode } from 'react-icons/fa';
+import { FaEuroSign, FaBarcode, FaUser } from 'react-icons/fa';
 
 interface IntakeFormProps {
     onShowToast: (msg: string) => void;
@@ -26,9 +27,29 @@ interface QCMItem {
 
 export const IntakeForm: React.FC<IntakeFormProps> = ({ onShowToast }) => {
     // 1. Intervention Block
+    const [clientName, setClientName] = useState('');
+    const [clientPhone, setClientPhone] = useState('');
+    const [clientEmailInput, setClientEmailInput] = useState('');
     const [deviceDesc, setDeviceDesc] = useState('');
     const [price, setPrice] = useState('');
     const [testCode, setTestCode] = useState('');
+
+    // Saved Forms State
+    const [currentFormId, setCurrentFormId] = useState<string | null>(null);
+    const [showSavedForms, setShowSavedForms] = useState(false);
+    const [savedFormsList, setSavedFormsList] = useState<any[]>([]);
+
+    useEffect(() => {
+        const loadList = () => {
+            const savedListStr = localStorage.getItem('intake_forms_list');
+            if (savedListStr) {
+                try {
+                    setSavedFormsList(JSON.parse(savedListStr));
+                } catch (e) { }
+            }
+        };
+        loadList();
+    }, []);
 
     // 2. Alertes (Red Flags)
     const [isOpened, setIsOpened] = useState(false);
@@ -107,6 +128,103 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onShowToast }) => {
         }
         // Allow printing regardless of signature status
         window.print();
+    };
+
+    const handleSave = () => {
+        // Collect current data
+        const dataToSave = {
+            id: currentFormId || Date.now().toString(),
+            clientName,
+            clientPhone,
+            clientEmailInput,
+            deviceDesc,
+            price,
+            testCode,
+            isOpened,
+            isWaterDamage,
+            isBootloop,
+            noTestPossible,
+            qcm,
+            signatureData: sigCanvas.current && !sigCanvas.current.isEmpty() ? sigCanvas.current.toDataURL() : '',
+            savedAt: Date.now()
+        };
+
+        try {
+            const savedListStr = localStorage.getItem('intake_forms_list');
+            let savedList: any[] = savedListStr ? JSON.parse(savedListStr) : [];
+
+            if (currentFormId) {
+                // Update existing
+                const index = savedList.findIndex(item => item.id === currentFormId);
+                if (index !== -1) {
+                    savedList[index] = dataToSave;
+                } else {
+                    savedList.unshift(dataToSave);
+                }
+            } else {
+                // Create new
+                setCurrentFormId(dataToSave.id);
+                savedList.unshift(dataToSave);
+            }
+
+            localStorage.setItem('intake_forms_list', JSON.stringify(savedList));
+            setSavedFormsList(savedList);
+            onShowToast(currentFormId ? "Prise en charge mise à jour !" : "Prise en charge sauvegardée en mémoire locale !");
+        } catch (error) {
+            console.error("Error saving intake form:", error);
+            onShowToast("Erreur lors de la sauvegarde.");
+        }
+    };
+
+    const loadSavedForm = (formItem: any) => {
+        setCurrentFormId(formItem.id);
+        setClientName(formItem.clientName || '');
+        setClientPhone(formItem.clientPhone || '');
+        setClientEmailInput(formItem.clientEmailInput || '');
+        setDeviceDesc(formItem.deviceDesc || '');
+        setPrice(formItem.price || '');
+        setTestCode(formItem.testCode || '');
+        setIsOpened(formItem.isOpened || false);
+        setIsWaterDamage(formItem.isWaterDamage || false);
+        setIsBootloop(formItem.isBootloop || false);
+        setNoTestPossible(formItem.noTestPossible || false);
+
+        // Safely load QCM to avoid crashes if properties are missing in older saves
+        if (formItem.qcm && Array.isArray(formItem.qcm)) {
+            const safeQcm = formItem.qcm.map((item: any) => {
+                const initialItem = initialQCM.find(iqcm => iqcm.id === item.id);
+                return {
+                    ...item,
+                    icon: initialItem?.icon || FaCube,
+                    status: item.status || 'nt',
+                    comment: item.comment || '',
+                    isCommentVisible: item.isCommentVisible || false
+                };
+            });
+            setQcm(safeQcm);
+        } else {
+            setQcm(initialQCM);
+        }
+
+        setTimeout(() => {
+            if (sigCanvas.current) {
+                sigCanvas.current.clear();
+                if (formItem.signatureData) {
+                    sigCanvas.current.fromDataURL(formItem.signatureData);
+                }
+            }
+        }, 100);
+
+        setShowSavedForms(false);
+        onShowToast("Prise en charge chargée !");
+    };
+
+    const deleteSavedForm = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        const newList = savedFormsList.filter(item => item.id !== id);
+        setSavedFormsList(newList);
+        localStorage.setItem('intake_forms_list', JSON.stringify(newList));
+        onShowToast("Prise en charge supprimée !");
     };
 
     const handleSendMail = () => {
@@ -257,43 +375,73 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onShowToast }) => {
                     </div>
                 </div>
                 <div className="flex gap-3 w-full md:w-auto">
-                    <button onClick={handlePrint} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white/40 dark:bg-black/40 backdrop-blur-md rounded-[20px] text-sm font-bold text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-white/10 hover:border-orange-500 hover:bg-white/60 dark:hover:bg-black/60 transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_2px_10px_rgba(0,0,0,0.05)]">
-                        <FaPrint /> Imprimer (80mm)
+                    <button onClick={() => setShowSavedForms(true)} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 dark:bg-white/5 bg-black/5 backdrop-blur-md dark:text-neutral-400 text-neutral-600 rounded-full font-tech text-xs uppercase tracking-widest font-bold hover:bg-black/10 dark:hover:bg-white/10 transition-all border dark:border-white/10 border-black/5 hover:border-black/20 dark:hover:border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] relative">
+                        <FaListUl /> <span className="hidden md:inline">Mes tickets</span>
+                        {savedFormsList.length > 0 && (
+                            <span className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold bg-orange-500 text-white shadow-md">
+                                {savedFormsList.length}
+                            </span>
+                        )}
+                    </button>
+                    <button onClick={handleSave} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 dark:bg-white/5 bg-black/5 backdrop-blur-md dark:text-neutral-400 text-neutral-600 rounded-full font-tech text-xs uppercase tracking-widest font-bold hover:bg-black/10 dark:hover:bg-white/10 transition-all border dark:border-white/10 border-black/5 hover:border-black/20 dark:hover:border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
+                        <FaFloppyDisk /> <span className="hidden md:inline">Sauvegarder</span>
+                    </button>
+                    <button onClick={handlePrint} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white/40 dark:bg-black/40 backdrop-blur-md rounded-full text-sm font-tech font-bold uppercase tracking-widest text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-white/10 hover:border-orange-500 hover:bg-white/60 dark:hover:bg-black/60 transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_2px_10px_rgba(0,0,0,0.05)]">
+                        <FaPrint /> Imprimer (A4)
                     </button>
                 </div>
             </div>
 
-            {/* --- MAIN FORM & PRINT WRAPPER (80mm Target) --- */}
-            <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto print:max-w-full print:block print:gap-2 print:space-y-2 print:text-[12px] print:leading-tight">
-
-                {/* IMPRESSION HEADER (ONLY ON PRINT) */}
-                <div className="hidden print:flex flex-col items-center justify-center mb-2 border-b border-black border-dashed pb-2 text-center text-black">
-                    <h1 className="text-2xl font-tech font-bold uppercase tracking-widest leading-none mb-1">iServices</h1>
-                    <p className="text-[10px] font-sans font-bold uppercase tracking-wide">Prise en Charge</p>
-                    <div className="text-[9px] mt-1 flex justify-between w-full px-2">
-                        <span>{new Date().toLocaleDateString('fr-FR')}</span>
-                        <span>{new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
+            {/* --- IMPRESSION HEADER --- */}
+            <div className="hidden print:flex justify-between items-start mb-8 print:mb-2 border-b-2 border-black pb-4 print:pb-2">
+                <div>
+                    <h1 className="text-4xl print:text-2xl font-tech font-bold uppercase tracking-widest text-black">iServices</h1>
+                    <p className="text-xl print:text-sm font-sans text-neutral-800 tracking-wide mt-2 print:mt-1">Bon de Prise en Charge</p>
                 </div>
+                <div className="text-right text-sm print:text-xs">
+                    <p>Date : {new Date().toLocaleDateString('fr-FR')}</p>
+                    <p className="font-mono mt-1 text-xs">Heure : {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+            </div>
+
+            {/* --- MAIN FORM CONTENT --- */}
+            <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto print:max-w-full print:block print:gap-1 print:space-y-2">
 
                 {/* 1. Bloc Intervention */}
-                <div className="bg-white/40 dark:bg-[#1a1a1a]/40 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.05)] print:shadow-none print:border print:border-black print:rounded-none print:backdrop-blur-none print:bg-transparent text-black dark:text-white print:text-black print:p-2 print:mb-2 text-xs">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 mb-6 flex items-center gap-2 print:text-black print:mb-2 print:text-[10px] print:border-b print:border-black print:pb-1 print:justify-center print:border-dashed">
-                        <FaScrewdriverWrench className="print:hidden" /> Intervention
+                <div className="bg-white/40 dark:bg-[#1a1a1a]/40 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.05)] print:shadow-none print:border print:border-black print:rounded-lg print:backdrop-blur-none print:bg-transparent text-black dark:text-white print:text-black print:p-2">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 mb-6 flex items-center gap-2 print:text-black print:mb-2 print:text-[10px]">
+                        <FaScrewdriverWrench /> Détails Intervention
                     </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6 print:grid-cols-1 print:gap-1">
-                        <div className="flex flex-col gap-2 col-span-2 md:col-span-1 print:flex-row print:justify-between print:gap-1 print:border-b print:border-dashed print:border-black/30 print:pb-1 print:items-center">
-                            <label className="text-xs font-bold uppercase ml-2 text-neutral-500 print:text-[10px] print:m-0 print:text-black">Appareil :</label>
-                            <span className="hidden print:block text-[10px] font-bold text-right truncate w-2/3">{deviceDesc || '-'}</span>
-                            <div className="print:hidden">
-                                <input type="text" value={deviceDesc} onChange={e => setDeviceDesc(e.target.value)} placeholder="Ex: iPhone 13 Pro - Écran" className="w-full bg-white/60 dark:bg-black/60 border border-black/10 dark:border-white/10 rounded-[16px] px-4 py-3 text-sm focus:border-orange-500 outline-none" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 print:grid-cols-8 print:gap-4">
+                        <div className="flex flex-col gap-2 print:col-span-3">
+                            <label className="text-xs font-bold uppercase ml-2 text-neutral-500">Nom et Prénom</label>
+                            <div className="relative">
+                                <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 print:hidden" />
+                                <input type="text" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Nom du client" className="w-full bg-white/60 dark:bg-black/60 border border-black/10 dark:border-white/10 rounded-[16px] pl-10 print:pl-4 pr-4 py-3 text-sm focus:border-orange-500 outline-none print:bg-transparent print:border print:border-neutral-300 print:rounded-lg" />
                             </div>
                         </div>
-                        <div className="flex flex-col gap-2 col-span-1 print:flex-row print:justify-between print:gap-1 print:border-b print:border-dashed print:border-black/30 print:pb-1 print:items-center">
-                            <label className="text-xs font-bold uppercase ml-2 text-neutral-500 print:text-[10px] print:m-0 print:text-black">Prix :</label>
-                            <span className="hidden print:block text-[10px] font-bold text-right">{price || '-'}</span>
-                            <div className="relative print:hidden">
-                                <FaEuroSign className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" />
+                        <div className="flex flex-col gap-2 print:col-span-2">
+                            <label className="text-xs font-bold uppercase ml-2 text-neutral-500">Téléphone</label>
+                            <div className="relative">
+                                <FaPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 print:hidden" />
+                                <input type="text" value={clientPhone} onChange={e => setClientPhone(e.target.value)} placeholder="06 00 00 00 00" className="w-full bg-white/60 dark:bg-black/60 border border-black/10 dark:border-white/10 rounded-[16px] pl-10 print:pl-4 pr-4 py-3 text-sm focus:border-orange-500 outline-none print:bg-transparent print:border print:border-neutral-300 print:rounded-lg" />
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-2 print:col-span-3">
+                            <label className="text-xs font-bold uppercase ml-2 text-neutral-500">E-mail</label>
+                            <div className="relative">
+                                <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 print:hidden" />
+                                <input type="email" value={clientEmailInput} onChange={e => setClientEmailInput(e.target.value)} placeholder="client@email.com" className="w-full bg-white/60 dark:bg-black/60 border border-black/10 dark:border-white/10 rounded-[16px] pl-10 print:pl-4 pr-4 py-3 text-sm focus:border-orange-500 outline-none print:bg-transparent print:border print:border-neutral-300 print:rounded-lg print:text-xs" />
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-2 md:col-span-2 lg:col-span-1 print:col-span-6">
+                            <label className="text-xs font-bold uppercase ml-2 text-neutral-500">Changement de...</label>
+                            <input type="text" value={deviceDesc} onChange={e => setDeviceDesc(e.target.value)} placeholder="Ex: iPhone 13 Pro - Écran" className="w-full bg-white/60 dark:bg-black/60 border border-black/10 dark:border-white/10 rounded-[16px] px-4 py-3 text-sm focus:border-orange-500 outline-none print:bg-transparent print:border print:border-neutral-300 print:rounded-lg" />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-xs font-bold uppercase ml-2 text-neutral-500">Prix convenu</label>
+                            <div className="relative">
+                                <FaEuroSign className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 print:hidden" />
                                 <input
                                     type="text"
                                     value={price}
@@ -302,11 +450,11 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onShowToast }) => {
                                         setPrice(val ? `${val} €` : '');
                                     }}
                                     placeholder="0.00 €"
-                                    className="w-full bg-white/60 dark:bg-black/60 border border-black/10 dark:border-white/10 rounded-[16px] pl-10 pr-4 py-3 text-sm focus:border-orange-500 outline-none"
+                                    className="w-full bg-white/60 dark:bg-black/60 border border-black/10 dark:border-white/10 rounded-[16px] pl-10 print:pl-4 pr-4 py-3 text-sm focus:border-orange-500 outline-none print:bg-transparent print:border print:border-neutral-300 print:rounded-lg"
                                 />
                             </div>
                         </div>
-                        <div className="flex flex-col gap-2 col-span-1 print:hidden">
+                        <div className="flex flex-col gap-2 print:hidden">
                             <label className="text-xs font-bold uppercase ml-2 text-neutral-500">Code de test</label>
                             <div className="relative">
                                 <FaBarcode className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" />
@@ -317,41 +465,38 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onShowToast }) => {
                 </div>
 
                 {/* 2. Alertes (Red Flags) */}
-                <div className="bg-white/40 dark:bg-[#1a1a1a]/40 border border-black/10 dark:border-white/10 rounded-[32px] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.05)] print:shadow-none print:bg-transparent print:border print:border-black print:rounded-none text-black dark:text-white print:text-black mt-4 print:mt-0 print:p-2 text-xs">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 mb-6 flex items-center gap-2 print:text-black print:mb-2 print:justify-center print:border-b print:border-dashed print:border-black print:pb-1 print:text-[10px]">
+                <div className="bg-white/40 dark:bg-[#1a1a1a]/40 border border-black/10 dark:border-white/10 rounded-[32px] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.05)] print:shadow-none print:bg-transparent print:border print:border-black print:rounded-lg text-black dark:text-white print:text-black mt-4 print:mt-0 print:p-2">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 mb-6 flex items-center gap-2 print:text-black print:mb-2 print:text-[10px]">
                         Alertes (Risques)
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:grid-cols-1 print:gap-1">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:grid-cols-3 print:gap-2">
                         <div className="print:hidden">
                             <CustomToggle label="Déjà Ouvert" icon={FaScrewdriverWrench} active={isOpened} onChange={() => setIsOpened(!isOpened)} colorClass="border-orange-500/50 text-orange-600" />
                         </div>
-                        <div className="hidden print:flex justify-between items-center text-[10px] print:border-b print:border-dashed print:border-black/30 print:pb-1">
-                            <span className="font-bold print:text-[10px]">Déjà Ouvert:</span>
-                            <span className="font-bold">{isOpened ? 'OUI' : 'NON'}</span>
+                        <div className="hidden print:block text-sm border border-neutral-300 p-2 rounded">
+                            Déjà Ouvert: <span className="font-bold">{isOpened ? 'OUI' : 'NON'}</span>
                         </div>
 
                         <div className="print:hidden">
                             <CustomToggle label="Contact Eau" icon={FaDroplet} active={isWaterDamage} onChange={() => setIsWaterDamage(!isWaterDamage)} colorClass="border-blue-500/50 text-blue-600" />
                         </div>
-                        <div className="hidden print:flex justify-between items-center text-[10px] print:border-b print:border-dashed print:border-black/30 print:pb-1">
-                            <span className="font-bold print:text-[10px]">Cx. Eau / Oxydé:</span>
-                            <span className="font-bold">{isWaterDamage ? 'OUI' : 'NON'}</span>
+                        <div className="hidden print:block text-sm border border-neutral-300 p-2 rounded">
+                            Oxydation: <span className="font-bold">{isWaterDamage ? 'OUI' : 'NON'}</span>
                         </div>
 
                         <div className="print:hidden">
                             <CustomToggle label="Bootloop" icon={FaRotateLeft} active={isBootloop} onChange={() => setIsBootloop(!isBootloop)} colorClass="border-red-500/50 text-red-600" />
                         </div>
-                        <div className="hidden print:flex justify-between items-center text-[10px] print:border-b print:border-dashed print:border-black/30 print:pb-1">
-                            <span className="font-bold print:text-[10px]">Bootloop:</span>
-                            <span className="font-bold">{isBootloop ? 'OUI' : 'NON'}</span>
+                        <div className="hidden print:block text-sm border border-neutral-300 p-2 rounded">
+                            Bootloop: <span className="font-bold">{isBootloop ? 'OUI' : 'NON'}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* 3. Check-up (QCM) */}
-                <div className="bg-white/40 dark:bg-[#1a1a1a]/40 border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.05)] print:shadow-none print:border print:border-black print:rounded-none print:bg-transparent text-black dark:text-white print:text-black mt-4 print:mt-0 print:p-2 text-xs">
+                <div className="bg-white/40 dark:bg-[#1a1a1a]/40 border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.05)] print:shadow-none print:border print:border-black print:rounded-lg print:bg-transparent text-black dark:text-white print:text-black mt-4 print:mt-0 print:p-2">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 print:mb-2 print:pb-0">
-                        <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 flex items-center gap-2 print:text-black print:text-[10px] print:w-full print:justify-center print:border-b print:border-dashed print:border-black print:pb-1">
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 flex items-center gap-2 print:text-black print:text-[10px]">
                             Check-Up Appareil
                         </h3>
                         <div className="print:hidden w-full md:w-auto">
@@ -363,27 +508,27 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onShowToast }) => {
                             </button>
                         </div>
                         {noTestPossible && (
-                            <div className="hidden print:block text-black font-bold border border-black p-1 text-center text-[10px] uppercase">
+                            <div className="hidden print:block text-red-600 font-bold border-2 border-red-600 p-2 text-center uppercase">
                                 AUCUN TEST POSSIBLE AVANT RÉPARATION
                             </div>
                         )}
                     </div>
 
-                    <div className={`grid grid-cols-1 gap-4 print:gap-1 ${noTestPossible ? 'opacity-50 pointer-events-none print:hidden' : ''}`}>
+                    <div className={`grid grid-cols-1 gap-4 print:gap-0 ${noTestPossible ? 'opacity-50 pointer-events-none print:hidden' : ''}`}>
                         {qcm.map((item) => (
-                            <div key={item.id} className="print:break-inside-avoid flex flex-col bg-white/60 dark:bg-black/40 print:bg-transparent rounded-[20px] p-3 md:p-4 print:p-0 print:py-0 border border-black/5 dark:border-white/5 print:border-none print:rounded-none">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:flex-row print:justify-between print:gap-0 print:border-b print:border-dashed print:border-black/30 print:pb-[2px]">
-                                    <div className="flex items-center gap-3 w-full md:w-1/3 print:w-auto">
+                            <div key={item.id} className="print:break-inside-avoid flex flex-col bg-white/60 dark:bg-black/40 print:bg-transparent rounded-[20px] print:border-b p-3 md:p-4 print:p-0 print:py-0 border border-black/5 dark:border-white/5 print:border-black/20 print:border-none print:border-b print:rounded-none">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:gap-0">
+                                    <div className="flex items-center gap-3 w-full md:w-1/3">
                                         <div className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center print:hidden"><item.icon className="text-neutral-500" /></div>
                                         <span className="font-bold text-sm print:text-[10px]">{item.label}</span>
                                     </div>
 
-                                    <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 scrollbar-hide print:pb-0 print:overflow-hidden print:w-auto">
+                                    <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
                                         <div className="print:hidden">
                                             <SegmentedControl item={item} />
                                         </div>
-                                        <div className="hidden print:block text-[10px] font-bold px-1 text-right min-w-[30px]">
-                                            {item.status.toUpperCase()}
+                                        <div className="hidden print:block text-[10px] font-bold px-1">
+                                            {item.status === 'ok' ? 'OK' : item.status === 'hs' ? 'HS' : 'NT'}
                                         </div>
 
                                         <button
@@ -400,15 +545,14 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onShowToast }) => {
                                             initial={{ height: 0, opacity: 0 }}
                                             animate={{ height: 'auto', opacity: 1 }}
                                             exit={{ height: 0, opacity: 0 }}
-                                            className="overflow-hidden mt-3 print:mt-0 print:h-auto print:opacity-100"
+                                            className="overflow-hidden mt-3 print:mt-1 print:h-auto print:opacity-100"
                                         >
-                                            <div className="hidden print:block text-[9px] italic ml-2 mt-[2px] leading-tight">- {item.comment}</div>
                                             <input
                                                 type="text"
                                                 value={item.comment}
                                                 onChange={(e) => updateComment(item.id, e.target.value)}
                                                 placeholder="Note (ex: Rayure profonde)"
-                                                className="print:hidden w-full text-sm p-3 bg-black/5 dark:bg-white/5 rounded-xl outline-none focus:border-orange-500 border border-transparent"
+                                                className="w-full text-sm p-3 print:py-0 print:px-0 bg-black/5 dark:bg-white/5 rounded-xl outline-none focus:border-orange-500 border border-transparent print:bg-transparent print:border-none print:text-[9px] print:italic"
                                             />
                                         </motion.div>
                                     )}
@@ -419,11 +563,14 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onShowToast }) => {
                 </div>
 
                 {/* 4. Validation & Signature */}
-                <div className="bg-white/40 dark:bg-[#1a1a1a]/40 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.05)] print:shadow-none print:border-none print:rounded-none print:backdrop-blur-none print:bg-transparent text-black dark:text-white print:text-black mt-4 print:mt-2 mb-8 print:mb-0 print:break-inside-avoid print:p-0 text-xs text-center">
-                    <p className="text-xs text-neutral-500 mb-4 print:mb-2 leading-tight max-w-2xl print:text-black print:font-sans print:text-[8px] print:text-justify mx-auto">
+                <div className="bg-white/40 dark:bg-[#1a1a1a]/40 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.05)] print:shadow-none print:border print:border-black print:rounded-lg print:backdrop-blur-none print:bg-transparent text-black dark:text-white print:text-black mt-4 print:mt-0 mb-8 print:mb-0 print:break-inside-avoid print:p-2">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 mb-4 print:mb-1 flex items-center gap-2 print:text-black print:text-[10px]">
+                        Signature du Client
+                    </h3>
+                    <p className="text-xs text-neutral-500 mb-4 print:mb-1 leading-relaxed max-w-2xl print:text-black print:font-sans print:text-[9px]">
                         Je soussigné(e) déclare avoir pris connaissance des conditions générales de réparation. En cas "d'Aucun Test Possible" ou d'appareils "Déjà Ouvert / Eau", les garanties post-réparation peuvent être limitées.
                     </p>
-                    <div className="relative w-full h-48 md:h-64 border-2 dark:border-[#333] border-neutral-300 border-dashed rounded-[20px] bg-white dark:bg-[#111] overflow-hidden group print:border print:border-black print:rounded-none print:bg-transparent print:h-20 print:flex print:items-center print:justify-center mx-auto">
+                    <div className="relative w-full h-48 md:h-64 border-2 dark:border-[#333] border-neutral-300 border-dashed rounded-[20px] bg-white dark:bg-[#111] overflow-hidden group print:border-none print:bg-transparent print:h-20">
                         <SignatureCanvas
                             ref={sigCanvas}
                             penColor={document.documentElement.classList.contains('dark') ? 'white' : 'black'}
@@ -440,11 +587,6 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onShowToast }) => {
                         <div className="absolute inset-x-0 bottom-4 text-center pointer-events-none print:hidden">
                             <span className="text-neutral-300 dark:text-[#333] text-sm font-tech tracking-widest uppercase">Signer ici</span>
                         </div>
-                        <div className="hidden print:block absolute top-1 left-1 text-[8px] text-black">Sign. Client</div>
-                    </div>
-
-                    <div className="hidden print:block text-center mt-4 text-[9px] italic border-t border-black border-dashed pt-2">
-                        Merci de votre confiance - iServices
                     </div>
                 </div>
             </div>
@@ -507,6 +649,79 @@ export const IntakeForm: React.FC<IntakeFormProps> = ({ onShowToast }) => {
                                     <><span className="text-neutral-500">ENVOYER</span> <FaPaperPlane className="text-orange-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /></>
                                 )}
                             </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Saved Forms Modal */}
+            <AnimatePresence>
+                {showSavedForms && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            onClick={() => setShowSavedForms(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-2xl bg-white dark:bg-[#111] border border-black/10 dark:border-white/10 rounded-[32px] p-6 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-tech font-bold uppercase tracking-widest text-black dark:text-white flex items-center gap-2">
+                                    <FaListUl className="text-orange-500" /> Mes Tickets Sauvegardés
+                                </h2>
+                                <button
+                                    onClick={() => setShowSavedForms(false)}
+                                    className="w-8 h-8 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-500 transition-colors"
+                                >
+                                    <FaXmark />
+                                </button>
+                            </div>
+
+                            <div className="overflow-y-auto scrollbar-thin pr-2 flex-grow space-y-3">
+                                {savedFormsList.length === 0 ? (
+                                    <div className="text-center py-10 text-neutral-500">
+                                        <p>Aucun ticket sauvegardé.</p>
+                                    </div>
+                                ) : (
+                                    savedFormsList.map((item, idx) => (
+                                        <div key={item.id || idx} className="flex items-center justify-between p-4 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-transparent rounded-[20px] transition-colors group cursor-pointer" onClick={() => loadSavedForm(item)}>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1 items-center">
+                                                <div>
+                                                    <div className="text-[10px] uppercase tracking-wider text-neutral-400 font-bold">Client</div>
+                                                    <div className="text-sm border-none font-bold text-black dark:text-white truncate">{item.clientName || '-'}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] uppercase tracking-wider text-neutral-400 font-bold">Appareil</div>
+                                                    <div className="text-sm border-none text-neutral-700 dark:text-neutral-300 truncate">{item.deviceDesc || '-'}</div>
+                                                </div>
+                                                <div className="hidden md:block">
+                                                    <div className="text-[10px] uppercase tracking-wider text-neutral-400 font-bold">Téléphone</div>
+                                                    <div className="text-sm border-none text-neutral-700 dark:text-neutral-300 truncate">{item.clientPhone || '-'}</div>
+                                                </div>
+                                                <div className="text-right pr-4 col-span-2 md:col-span-1">
+                                                    <div className="text-[10px] uppercase tracking-wider text-neutral-400 font-bold">Date</div>
+                                                    <div className="text-xs border-none font-mono text-neutral-500">
+                                                        {new Date(item.savedAt).toLocaleDateString('fr-FR')} {new Date(item.savedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={(e) => deleteSavedForm(item.id, e)}
+                                                className="p-3 text-neutral-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors flex-shrink-0"
+                                                title="Supprimer"
+                                            >
+                                                <FaTrash />
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </motion.div>
                     </div>
                 )}

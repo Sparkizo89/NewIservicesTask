@@ -6,9 +6,11 @@ import ScrambleText from './ScrambleText';
 interface ProcedureCardProps {
   procedure: Procedure;
   onClick: (procedure: Procedure) => void;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
 }
 
-const ProcedureCard: React.FC<ProcedureCardProps> = ({ procedure, onClick }) => {
+const ProcedureCard: React.FC<ProcedureCardProps> = ({ procedure, onClick, isPinned = false, onTogglePin }) => {
   const [isGlitching, setIsGlitching] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -40,12 +42,17 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({ procedure, onClick }) => 
     }, 200);
   };
 
+  const handlePinClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onTogglePin) onTogglePin();
+  };
+
   return (
     <div
       onClick={handleCardClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`relative dark:bg-[#1a1a1a]/40 bg-white/40 backdrop-blur-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.05)] rounded-[32px] p-7 cursor-pointer transition-all duration-300 group overflow-hidden border dark:border-[#333]/50 border-white/60 hover:border-orange-500/50 hover:dark:bg-[#222]/50 hover:bg-white/60 active:scale-[0.98] glow-hover ${isGlitching ? 'glitch-active' : ''}`}
+      className={`relative dark:bg-[#1a1a1a]/40 bg-white/40 backdrop-blur-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.05)] rounded-[32px] p-7 ${isPinned ? 'border-orange-500/30' : 'border dark:border-[#333]/50 border-white/60'} cursor-pointer transition-all duration-300 group overflow-hidden border hover:border-orange-500/50 hover:dark:bg-[#222]/50 hover:bg-white/60 active:scale-[0.98] glow-hover ${isGlitching ? 'glitch-active' : ''}`}
     >
       {/* Glitch Overlay Effect */}
       {isGlitching && (
@@ -60,10 +67,25 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({ procedure, onClick }) => 
         <div className="w-16 h-16 rounded-2xl dark:bg-black/40 bg-white/40 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] border dark:border-white/10 border-black/5 dark:text-white text-black flex items-center justify-center text-3xl group-hover:bg-orange-600/90 group-hover:text-black group-hover:border-orange-500/50 group-hover:shadow-[0_0_15px_rgba(234,88,12,0.4),_inset_0_1px_1px_rgba(255,255,255,0.4)] transition-all duration-300">
           <Icon />
         </div>
-        <div className="flex flex-col items-end">
-          <span className="text-4xl dark:text-[#222] text-neutral-200 group-hover:text-[#333] transition-colors font-tech font-bold leading-none select-none">
-            0{Math.floor(Math.random() * 9)}
-          </span>
+        <div className="flex flex-col items-end gap-2 relative">
+          <div className="flex items-center gap-3">
+            {/* Pin Button */}
+            {onTogglePin && (
+              <button
+                onClick={handlePinClick}
+                className={`w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-md transition-all duration-500 overflow-hidden ${isPinned
+                  ? 'bg-orange-600 border border-orange-500/50 text-white shadow-[0_0_20px_rgba(234,88,12,0.6),_inset_0_2px_4px_rgba(255,255,255,0.4)] scale-100 rotate-[360deg] opacity-100'
+                  : 'dark:bg-white/5 bg-black/5 text-neutral-400 dark:border-white/10 border-black/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] opacity-0 group-hover:opacity-100 hover:text-orange-500 hover:scale-110 hover:rotate-12'
+                  }`}
+                title={isPinned ? "Désépingler de l'accueil" : "Épingler à l'accueil"}
+              >
+                <Fa6Icons.FaStar className={`text-sm transition-transform duration-500 ${isPinned ? 'animate-[pulse_1.5s_ease-in-out_infinite]' : ''}`} />
+              </button>
+            )}
+            <span className="text-4xl dark:text-[#222] text-neutral-200 group-hover:text-[#333] transition-colors font-tech font-bold leading-none select-none">
+              0{Math.floor(Math.random() * 9)}
+            </span>
+          </div>
           <span className="text-[10px] font-tech text-orange-600 border border-orange-600/30 px-2 py-0.5 rounded uppercase tracking-wider bg-orange-600/5 mt-1">
             <ScrambleText text={procedure.code} trigger={isHovered} />
           </span>
@@ -86,8 +108,9 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({ procedure, onClick }) => 
         <div className="w-1.5 h-1.5 rounded-full dark:bg-white bg-black"></div>
         <div className="w-1.5 h-1.5 rounded-full bg-orange-600"></div>
       </div>
-    </div>
+    </div >
   );
 };
 
 export default ProcedureCard;
+
