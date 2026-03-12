@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaBolt, FaMoon, FaSun, FaLayerGroup, FaAddressBook, FaBookOpen, FaEnvelope, FaFileSignature, FaMagnifyingGlass, FaXmark, FaWandMagicSparkles, FaRotate, FaClipboardList } from 'react-icons/fa6';
+import { FaBolt, FaMoon, FaSun, FaLayerGroup, FaAddressBook, FaBookOpen, FaEnvelope, FaFileSignature, FaMagnifyingGlass, FaXmark, FaWandMagicSparkles, FaRotate, FaClipboardList, FaBoxOpen } from 'react-icons/fa6';
 import { motion, AnimatePresence } from 'motion/react';
 import ScrambleText from './ScrambleText';
 import { ProcedureCategory } from '../types';
@@ -20,6 +20,7 @@ interface HeaderProps {
 
 const navItems = [
     { id: 'all', label: 'Procédures', icon: FaLayerGroup },
+    { id: 'stock', label: 'Stock', icon: FaBoxOpen },
     { id: 'qualirepar', label: 'QualiRépar', icon: FaFileSignature },
     { id: 'intake', label: 'Prise en Charge', icon: FaClipboardList },
     { id: 'contacts', label: 'Contacts', icon: FaAddressBook },

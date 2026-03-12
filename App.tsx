@@ -9,6 +9,7 @@ import Toast from './components/Toast';
 import ScrambleText from './components/ScrambleText';
 import QualiReparForm from './components/QualiReparForm';
 import { IntakeForm } from './components/IntakeForm';
+import StockView from './components/StockView';
 import { procedures } from './data/procedures';
 import { contacts } from './data/contacts';
 import { pdfContext } from './data/pdfContext';
@@ -355,7 +356,7 @@ const App: React.FC = () => {
     const [isThinking, setIsThinking] = useState(false);
 
     const filteredProcedures = useMemo(() => {
-        if (activeCategory === 'contacts' || activeCategory === 'mailbox' || activeCategory === 'qualirepar' || activeCategory === 'intake') return [];
+        if (activeCategory === 'contacts' || activeCategory === 'mailbox' || activeCategory === 'qualirepar' || activeCategory === 'intake' || activeCategory === 'stock') return [];
         let filtered = procedures.filter(p => {
             const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
             const matchesSearch =
@@ -1011,6 +1012,11 @@ const App: React.FC = () => {
         // === QUALIREPAR VIEW ===
         if (activeCategory === 'qualirepar') {
             return <QualiReparForm onShowToast={handleShowToast} />;
+        }
+
+        // === STOCK VIEW ===
+        if (activeCategory === 'stock') {
+            return <StockView isDarkMode={isDarkMode} isScrolled={isScrolled} />;
         }
 
         // === INTAKE FORM VIEW ===
