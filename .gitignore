@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+.DS_Store
+.vite
+.firebase
+# Clés Firebase Service Account (ne jamais committer !)
+*-firebase-adminsdk-*.json
+firebase-service-account*.json

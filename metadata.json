@@ -1,0 +1,5 @@
+{
+  "name": "iServices Task 3.0",
+  "description": "Internal procedure assistant and smart mailer tool for store operations.",
+  "requestFramePermissions": ["camera"]
+}
