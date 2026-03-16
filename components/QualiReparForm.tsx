@@ -206,7 +206,7 @@ const QualiReparForm: React.FC<QualiReparFormProps> = ({ onShowToast, userId }) 
         setQrStatus('waiting');
 
         // Always use the public Firebase Hosting URL — works on any network/4G
-        const PUBLIC_BASE = 'https://iservices-task.web.app';
+        const PUBLIC_BASE = 'https://iservices-task-840dd.web.app';
         const url = `${PUBLIC_BASE}/sign/${sessionId}`;
         setQrUrl(url);
         setShowQRModal(true);
