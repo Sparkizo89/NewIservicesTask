@@ -5,6 +5,8 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import { motion, AnimatePresence } from 'motion/react';
 import ScrambleText from './ScrambleText';
 import * as XLSX from 'xlsx';
+import { db } from '../firebase';
+import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 
 interface StockItem {
     'Code Article': string;
@@ -176,31 +178,41 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
         }
     };
 
-    // Load local sessions
+    // Load sessions from Firestore
     useEffect(() => {
-        const stored = localStorage.getItem('iservices_inventory_sessions');
-        if (stored) {
+        const loadSessions = async () => {
             try {
-                setSavedSessions(JSON.parse(stored));
+                const q = query(collection(db, 'inventory_sessions'), orderBy('date', 'desc'));
+                const querySnapshot = await getDocs(q);
+                const sessionsMap = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...(doc.data() as Omit<{ id: string, name: string, date: string, items: ActiveInventoryItem[] }, 'id'>)
+                }));
+                setSavedSessions(sessionsMap);
             } catch (e) {
-                console.error("Failed to parse saved sessions");
+                console.error("Failed to load saved sessions from Firestore", e);
             }
-        }
+        };
+        loadSessions();
     }, []);
 
     // Session Management Handlers
-    const handleSaveSession = () => {
+    const handleSaveSession = async () => {
         if (inventorySession.length === 0) return;
-        const newSession = {
-            id: Date.now().toString(),
+        const newSessionData = {
             name: `Session du ${new Date().toLocaleString('fr-FR')}`,
             date: new Date().toISOString(),
             items: [...inventorySession]
         };
-        const updated = [newSession, ...savedSessions];
-        setSavedSessions(updated);
-        localStorage.setItem('iservices_inventory_sessions', JSON.stringify(updated));
-        alert("Session sauvegardée avec succès !");
+        try {
+            const docRef = await addDoc(collection(db, 'inventory_sessions'), newSessionData);
+            const newSession = { id: docRef.id, ...newSessionData };
+            setSavedSessions(prev => [newSession, ...prev]);
+            alert("Session sauvegardée avec succès !");
+        } catch (e) {
+            console.error("Error saving session", e);
+            alert("Erreur lors de la sauvegarde.");
+        }
     };
 
     const handleLoadSession = (session: { id: string, name: string, date: string, items: ActiveInventoryItem[] }) => {
@@ -211,11 +223,15 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
         setShowSessionsModal(false);
     };
 
-    const handleDeleteSession = (id: string) => {
+    const handleDeleteSession = async (id: string) => {
         if (confirm("Supprimer cette session sauvegardée ?")) {
-            const updated = savedSessions.filter(s => s.id !== id);
-            setSavedSessions(updated);
-            localStorage.setItem('iservices_inventory_sessions', JSON.stringify(updated));
+            try {
+                await deleteDoc(doc(db, 'inventory_sessions', id));
+                setSavedSessions(prev => prev.filter(s => s.id !== id));
+            } catch (e) {
+                console.error("Error deleting session", e);
+                alert("Erreur lors de la suppression.");
+            }
         }
     };
 
