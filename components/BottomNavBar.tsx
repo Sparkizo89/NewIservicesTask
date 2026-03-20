@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaLayerGroup, FaAddressBook, FaEnvelope, FaFileSignature, FaClipboardList } from 'react-icons/fa6';
+import { FaLayerGroup, FaAddressBook, FaEnvelope, FaFileSignature, FaClipboardList, FaBoxOpen, FaBox } from 'react-icons/fa6';
 import { motion } from 'motion/react';
 import { ProcedureCategory } from '../types';
 
@@ -10,6 +10,8 @@ interface BottomNavBarProps {
 
 const navItems = [
     { id: 'all', label: 'Procédures', icon: FaLayerGroup },
+    { id: 'stock', label: 'Stock', icon: FaBoxOpen },
+    { id: 'colis', label: 'Colis', icon: FaBox },
     { id: 'qualirepar', label: 'QualiRépar', icon: FaFileSignature },
     { id: 'intake', label: 'Tickets', icon: FaClipboardList },
     { id: 'contacts', label: 'Contacts', icon: FaAddressBook },

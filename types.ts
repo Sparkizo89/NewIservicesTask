@@ -62,4 +62,4 @@ export interface FormData {
   items: Record<string, string>[];
 }
 
-export type ProcedureCategory = 'all' | 'stock' | 'admin' | 'contacts' | 'mailbox' | 'qualirepar' | 'intake';
+export type ProcedureCategory = 'all' | 'stock' | 'admin' | 'contacts' | 'mailbox' | 'qualirepar' | 'intake' | 'colis';

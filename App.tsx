@@ -10,6 +10,7 @@ import ScrambleText from './components/ScrambleText';
 import QualiReparForm from './components/QualiReparForm';
 import { IntakeForm } from './components/IntakeForm';
 import StockView from './components/StockView';
+import ColisView from './components/ColisView';
 import SignaturePage from './components/SignaturePage';
 import { procedures } from './data/procedures';
 import { contacts } from './data/contacts';
@@ -810,143 +811,141 @@ const App: React.FC = () => {
     };
 
     const renderContent = () => {
-        // === MAILBOX VIEW (GMAIL STYLE) ===
-        if (activeCategory === 'mailbox') {
-
-            // --- VUE DÉTAIL (THREAD) ---
-            if (selectedEmail) {
-                return (
-                    <div className="flex flex-col h-full animate-fadeIn pb-5 md:pb-10 relative bg-white dark:bg-[#0a0a0a] md:bg-transparent">
-                        {/* Toolbar Detail */}
-                        <div className="flex items-center gap-4 mb-2 p-4 md:p-0 md:mb-6 border-b md:border-b-0 dark:border-[#262626] border-neutral-200">
-                            <button onClick={() => setSelectedEmail(null)} className="p-2 md:p-2 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors bg-neutral-100 dark:bg-[#111] md:bg-transparent" title="Retour">
-                                <FaChevronLeft className="text-neutral-600 dark:text-neutral-400 hover:text-orange-600 text-lg md:text-base" />
-                            </button>
-                            <div className="flex-1 min-w-0">
-                                <h2 className="text-base md:text-xl font-sans font-bold dark:text-white text-black truncate pr-4">{selectedEmail.subject}</h2>
-                                <div className="flex items-center gap-2 text-xs text-neutral-500 font-mono">
-                                    <span className="bg-neutral-200 dark:bg-[#222] px-2 py-0.5 rounded text-[10px] uppercase">{mailFolder === 'inbox' ? 'Boîte de réception' : 'Envoyés'}</span>
-                                    <span className="truncate">{new Date(selectedEmail.date).toLocaleString()}</span>
+        return (
+            <>
+                {/* === MAILBOX VIEW (GMAIL STYLE) === */}
+                {/* --- VUE DÉTAIL (THREAD) --- */}
+                <div className={`${activeCategory === 'mailbox' && selectedEmail ? 'flex' : 'hidden'} flex-col h-full animate-fadeIn pb-5 md:pb-10 relative bg-white dark:bg-[#0a0a0a] md:bg-transparent`}>
+                    {selectedEmail && (
+                        <>
+                            {/* Toolbar Detail */}
+                            <div className="flex items-center gap-4 mb-2 p-4 md:p-0 md:mb-6 border-b md:border-b-0 dark:border-[#262626] border-neutral-200">
+                                <button onClick={() => setSelectedEmail(null)} className="p-2 md:p-2 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors bg-neutral-100 dark:bg-[#111] md:bg-transparent" title="Retour">
+                                    <FaChevronLeft className="text-neutral-600 dark:text-neutral-400 hover:text-orange-600 text-lg md:text-base" />
+                                </button>
+                                <div className="flex-1 min-w-0">
+                                    <h2 className="text-base md:text-xl font-sans font-bold dark:text-white text-black truncate pr-4">{selectedEmail.subject}</h2>
+                                    <div className="flex items-center gap-2 text-xs text-neutral-500 font-mono">
+                                        <span className="bg-neutral-200 dark:bg-[#222] px-2 py-0.5 rounded text-[10px] uppercase">{mailFolder === 'inbox' ? 'Boîte de réception' : 'Envoyés'}</span>
+                                        <span className="truncate">{new Date(selectedEmail.date).toLocaleString()}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="flex-1 overflow-y-auto pr-0 md:pr-2 space-y-0 md:space-y-6 scrollbar-thin">
+                            <div className="flex-1 overflow-y-auto pr-0 md:pr-2 space-y-0 md:space-y-6 scrollbar-thin">
 
-                            {/* 1. Message Original (Reçu) */}
-                            <div className="dark:bg-[#1a1a1a]/40 bg-white/40 backdrop-blur-xl md:rounded-[32px] border-t md:border dark:border-white/10 border-black/10 overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.1)] transition-colors">
-                                {/* Header Message */}
-                                <div className="p-4 md:p-6 border-b dark:border-white/10 border-black/5 flex items-start gap-3 md:gap-4 dark:bg-white/5 bg-black/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
-                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-orange-500 to-orange-700 text-white flex items-center justify-center font-bold font-tech text-lg shadow-[0_0_15px_rgba(234,88,12,0.4)] shrink-0">
-                                        {selectedEmail.from.substring(0, 2).toUpperCase()}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-baseline">
-                                            <span className="font-bold font-sans text-neutral-800 dark:text-neutral-200 truncate text-sm md:text-base">{selectedEmail.from.split('<')[0]}</span>
-                                            <span className="text-xs text-neutral-400 font-mono hidden md:block">{new Date(selectedEmail.date).toLocaleString()}</span>
+                                {/* 1. Message Original (Reçu) */}
+                                <div className="dark:bg-[#1a1a1a]/40 bg-white/40 backdrop-blur-xl md:rounded-[32px] border-t md:border dark:border-white/10 border-black/10 overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.1)] transition-colors">
+                                    {/* Header Message */}
+                                    <div className="p-4 md:p-6 border-b dark:border-white/10 border-black/5 flex items-start gap-3 md:gap-4 dark:bg-white/5 bg-black/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+                                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-orange-500 to-orange-700 text-white flex items-center justify-center font-bold font-tech text-lg shadow-[0_0_15px_rgba(234,88,12,0.4)] shrink-0">
+                                            {selectedEmail.from.substring(0, 2).toUpperCase()}
                                         </div>
-                                        <span className="text-xs text-neutral-500 font-mono truncate block">{selectedEmail.from.match(/<(.+)>/)?.[1] || selectedEmail.from}</span>
-                                        <span className="text-xs text-neutral-500 block md:hidden mt-1">{new Date(selectedEmail.date).toLocaleDateString()}</span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-baseline">
+                                                <span className="font-bold font-sans text-neutral-800 dark:text-neutral-200 truncate text-sm md:text-base">{selectedEmail.from.split('<')[0]}</span>
+                                                <span className="text-xs text-neutral-400 font-mono hidden md:block">{new Date(selectedEmail.date).toLocaleString()}</span>
+                                            </div>
+                                            <span className="text-xs text-neutral-500 font-mono truncate block">{selectedEmail.from.match(/<([^>]+)>/)?.[1] || selectedEmail.from}</span>
+                                            <span className="text-xs text-neutral-500 block md:hidden mt-1">{new Date(selectedEmail.date).toLocaleDateString()}</span>
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* Body Message */}
-                                <div className="p-4 md:p-8 text-sm md:text-base font-sans leading-relaxed dark:text-neutral-300 text-neutral-700">
-                                    {selectedEmail.htmlBody ? (
-                                        <SafeEmailFrame html={selectedEmail.htmlBody} isDarkMode={isDarkMode} />
-                                    ) : (
-                                        <div className="whitespace-pre-wrap">{selectedEmail.fullBody}</div>
+                                    {/* Body Message */}
+                                    <div className="p-4 md:p-8 text-sm md:text-base font-sans leading-relaxed dark:text-neutral-300 text-neutral-700">
+                                        {selectedEmail.htmlBody ? (
+                                            <SafeEmailFrame html={selectedEmail.htmlBody} isDarkMode={isDarkMode} />
+                                        ) : (
+                                            <div className="whitespace-pre-wrap">{selectedEmail.fullBody}</div>
+                                        )}
+                                    </div>
+
+                                    {/* Attachments */}
+                                    {selectedEmail.attachments && selectedEmail.attachments.length > 0 && (
+                                        <div className="px-6 pb-6 pt-2 flex flex-wrap gap-3">
+                                            {selectedEmail.attachments.map((att, idx) => (
+                                                <a key={idx} href={`data:${att.mime};base64,${att.data}`} download={att.name} className="flex items-center gap-3 p-2 pr-4 rounded-lg bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-[#333] hover:border-orange-500 transition-colors group">
+                                                    <div className="w-8 h-8 rounded bg-white dark:bg-black flex items-center justify-center text-red-500"><FaFile /></div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs font-bold truncate max-w-[120px] dark:text-neutral-300">{att.name}</span>
+                                                        <span className="text-[9px] text-neutral-400 uppercase">Télécharger</span>
+                                                    </div>
+                                                </a>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
 
-                                {/* Attachments */}
-                                {selectedEmail.attachments && selectedEmail.attachments.length > 0 && (
-                                    <div className="px-6 pb-6 pt-2 flex flex-wrap gap-3">
-                                        {selectedEmail.attachments.map((att, idx) => (
-                                            <a key={idx} href={`data:${att.mime};base64,${att.data}`} download={att.name} className="flex items-center gap-3 p-2 pr-4 rounded-lg bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-200 dark:border-[#333] hover:border-orange-500 transition-colors group">
-                                                <div className="w-8 h-8 rounded bg-white dark:bg-black flex items-center justify-center text-red-500"><FaFile /></div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs font-bold truncate max-w-[120px] dark:text-neutral-300">{att.name}</span>
-                                                    <span className="text-[9px] text-neutral-400 uppercase">Télécharger</span>
+                                {/* 2. Zone de Réponse (Ouverture au clic) */}
+                                <div className="dark:bg-[#1a1a1a]/40 bg-white/40 backdrop-blur-xl md:rounded-[32px] border-t md:border dark:border-white/10 border-black/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.1)] overflow-hidden transition-all duration-300 pb-20 md:pb-0 mt-6">
+                                    {!isReplying ? (
+                                        <div
+                                            onClick={() => setIsReplying(true)}
+                                            className="p-4 flex items-center gap-4 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-neutral-500 border-t dark:border-white/10 border-black/10 md:border-none"
+                                        >
+                                            <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-[#222] flex items-center justify-center"><FaReply /></div>
+                                            <span className="font-sans text-sm">Cliquez ici pour <span className="font-bold">répondre</span>...</span>
+                                        </div>
+                                    ) : (
+                                        <div className="p-4 md:p-6 animate-fadeIn">
+                                            <div className="flex flex-wrap items-center gap-2 mb-4 bg-neutral-50 dark:bg-[#111] p-2 rounded-xl border dark:border-[#222] border-neutral-200">
+                                                <div className="flex-1 flex items-center gap-2 ml-2">
+                                                    <FaReply className="text-neutral-400" />
+                                                    <span className="text-xs font-bold uppercase text-neutral-500 font-tech tracking-wider hidden md:inline">Réponse à {selectedEmail.from.split('<')[0]}</span>
+                                                    <span className="text-xs font-bold uppercase text-neutral-500 font-tech tracking-wider md:hidden">Répondre</span>
                                                 </div>
-                                            </a>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* 2. Zone de Réponse (Ouverture au clic) */}
-                            <div className="dark:bg-[#1a1a1a]/40 bg-white/40 backdrop-blur-xl md:rounded-[32px] border-t md:border dark:border-white/10 border-black/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.1)] overflow-hidden transition-all duration-300 pb-20 md:pb-0 mt-6">
-                                {!isReplying ? (
-                                    <div
-                                        onClick={() => setIsReplying(true)}
-                                        className="p-4 flex items-center gap-4 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-neutral-500 border-t dark:border-white/10 border-black/10 md:border-none"
-                                    >
-                                        <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-[#222] flex items-center justify-center"><FaReply /></div>
-                                        <span className="font-sans text-sm">Cliquez ici pour <span className="font-bold">répondre</span>...</span>
-                                    </div>
-                                ) : (
-                                    <div className="p-4 md:p-6 animate-fadeIn">
-                                        <div className="flex flex-wrap items-center gap-2 mb-4 bg-neutral-50 dark:bg-[#111] p-2 rounded-xl border dark:border-[#222] border-neutral-200">
-                                            <div className="flex-1 flex items-center gap-2 ml-2">
-                                                <FaReply className="text-neutral-400" />
-                                                <span className="text-xs font-bold uppercase text-neutral-500 font-tech tracking-wider hidden md:inline">Réponse à {selectedEmail.from.split('<')[0]}</span>
-                                                <span className="text-xs font-bold uppercase text-neutral-500 font-tech tracking-wider md:hidden">Répondre</span>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={handleAutoCorrect}
+                                                        disabled={isGeneratingReply || !replyDraft.trim()}
+                                                        className="flex items-center gap-2 px-3 py-2 md:py-1.5 bg-white dark:bg-[#222] border dark:border-[#333] border-neutral-300 hover:border-orange-500 rounded-lg text-xs font-bold uppercase transition-all"
+                                                        title="Correction Orthographe"
+                                                    >
+                                                        {isGeneratingReply ? <FaRotate className="animate-spin" /> : <FaSpellCheck />}
+                                                        <span className="hidden md:inline">Correction</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={handleMagicReply}
+                                                        disabled={isGeneratingReply}
+                                                        className="flex items-center gap-2 px-3 py-2 md:py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-lg text-xs font-bold uppercase shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:scale-105 transition-all"
+                                                    >
+                                                        {isGeneratingReply ? <FaRotate className="animate-spin" /> : <FaWandMagicSparkles />}
+                                                        Assistant IA
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={handleAutoCorrect}
-                                                    disabled={isGeneratingReply || !replyDraft.trim()}
-                                                    className="flex items-center gap-2 px-3 py-2 md:py-1.5 bg-white dark:bg-[#222] border dark:border-[#333] border-neutral-300 hover:border-orange-500 rounded-lg text-xs font-bold uppercase transition-all"
-                                                    title="Correction Orthographe"
-                                                >
-                                                    {isGeneratingReply ? <FaRotate className="animate-spin" /> : <FaSpellCheck />}
-                                                    <span className="hidden md:inline">Correction</span>
-                                                </button>
-                                                <button
-                                                    onClick={handleMagicReply}
-                                                    disabled={isGeneratingReply}
-                                                    className="flex items-center gap-2 px-3 py-2 md:py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-lg text-xs font-bold uppercase shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:scale-105 transition-all"
-                                                >
-                                                    {isGeneratingReply ? <FaRotate className="animate-spin" /> : <FaWandMagicSparkles />}
-                                                    Assistant IA
-                                                </button>
-                                            </div>
-                                        </div>
 
-                                        <textarea
-                                            autoFocus
-                                            value={replyDraft}
-                                            onChange={(e) => setReplyDraft(e.target.value)}
-                                            placeholder="Rédigez votre réponse..."
-                                            className="w-full h-64 md:h-48 p-4 rounded-[20px] dark:bg-black/20 bg-white/40 backdrop-blur-md border dark:border-white/10 border-black/10 font-sans text-base focus:border-orange-600 focus:outline-none transition-colors dark:text-white text-black resize-none leading-relaxed shadow-[inset_0_1px_4px_rgba(0,0,0,0.05)]"
-                                        />
+                                            <textarea
+                                                autoFocus
+                                                value={replyDraft}
+                                                onChange={(e) => setReplyDraft(e.target.value)}
+                                                placeholder="Rédigez votre réponse..."
+                                                className="w-full h-64 md:h-48 p-4 rounded-[20px] dark:bg-black/20 bg-white/40 backdrop-blur-md border dark:border-white/10 border-black/10 font-sans text-base focus:border-orange-600 focus:outline-none transition-colors dark:text-white text-black resize-none leading-relaxed shadow-[inset_0_1px_4px_rgba(0,0,0,0.05)]"
+                                            />
 
-                                        <div className="flex items-center justify-between mt-4">
-                                            <p className="text-[10px] text-neutral-400 font-mono hidden md:block">* L'assistant IA prépare le texte, prix à compléter.</p>
-                                            <div className="flex gap-3 w-full md:w-auto">
-                                                <button onClick={() => setIsReplying(false)} className="flex-1 md:flex-none px-4 py-3 md:py-2 text-neutral-500 hover:text-black dark:hover:text-white font-bold text-xs uppercase transition-colors bg-neutral-100 dark:bg-[#222] md:bg-transparent rounded-lg md:rounded-none">Annuler</button>
-                                                <button
-                                                    onClick={handleSendReply}
-                                                    disabled={isSendingReply || !replyDraft.trim()}
-                                                    className="flex-1 md:flex-none bg-orange-600 text-white px-6 py-3 md:py-2 rounded-lg font-bold text-sm uppercase tracking-wide hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                                >
-                                                    {isSendingReply ? "Envoi..." : <><FaPaperPlane /> Envoyer</>}
-                                                </button>
+                                            <div className="flex items-center justify-between mt-4">
+                                                <p className="text-[10px] text-neutral-400 font-mono hidden md:block">* L'assistant IA prépare le texte, prix à compléter.</p>
+                                                <div className="flex gap-3 w-full md:w-auto">
+                                                    <button onClick={() => setIsReplying(false)} className="flex-1 md:flex-none px-4 py-3 md:py-2 text-neutral-500 hover:text-black dark:hover:text-white font-bold text-xs uppercase transition-colors bg-neutral-100 dark:bg-[#222] md:bg-transparent rounded-lg md:rounded-none">Annuler</button>
+                                                    <button
+                                                        onClick={handleSendReply}
+                                                        disabled={isSendingReply || !replyDraft.trim()}
+                                                        className="flex-1 md:flex-none bg-orange-600 text-white px-6 py-3 md:py-2 rounded-lg font-bold text-sm uppercase tracking-wide hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                                    >
+                                                        {isSendingReply ? "Envoi..." : <><FaPaperPlane /> Envoyer</>}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                );
-            }
+                        </>
+                    )}
+                </div>
 
-            // --- VUE LISTE (GMAIL STYLE) ---
-            return (
-                <div className="flex flex-col h-full overflow-hidden">
-                    {/* 1. Header & Recherche */}
+                {/* --- VUE LISTE MAILBOX --- */}
+                <div className={`${activeCategory === 'mailbox' && !selectedEmail ? 'flex' : 'hidden'} flex-col h-full overflow-hidden`}>
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-2 md:mb-6 shrink-0">
                         <div className="hidden md:flex items-center gap-4 w-full md:w-auto">
                             <div className="w-10 h-10 flex items-center justify-center bg-orange-600 text-white rounded-xl shadow-lg shrink-0">
@@ -955,7 +954,6 @@ const App: React.FC = () => {
                             <h2 className="text-xl font-tech font-bold dark:text-white text-black uppercase tracking-tight hidden md:block">Messagerie</h2>
                         </div>
 
-                        {/* Search Bar Pro */}
                         <div className="flex-1 w-full md:w-auto relative group shrink-0">
                             <FaMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-orange-600 transition-colors z-10" />
                             <input
@@ -973,7 +971,7 @@ const App: React.FC = () => {
                     </div>
 
                     <div className="flex flex-1 overflow-hidden gap-6">
-                        {/* 2. Sidebar Dossiers (Desktop) */}
+                        {/* Sidebar Dossiers Desktop */}
                         <div className="hidden md:flex flex-col w-48 shrink-0 gap-3">
                             <button
                                 onClick={() => { setMailFolder('inbox'); setSelectedEmail(null); }}
@@ -994,9 +992,8 @@ const App: React.FC = () => {
                             <button className="flex items-center gap-3 px-5 py-2.5 text-sm text-neutral-500 hover:text-black dark:hover:text-white hover:bg-white/20 dark:hover:bg-black/20 rounded-[16px] transition-colors"><FaSquare className="text-xs text-green-500" /> Terminé</button>
                         </div>
 
-                        {/* 3. Liste des Emails */}
+                        {/* Liste des Emails */}
                         <div className="flex-1 dark:bg-[#1a1a1a]/40 bg-white/40 backdrop-blur-xl md:rounded-[32px] border-t md:border dark:border-white/10 border-black/10 overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.1)] flex flex-col relative transition-colors">
-
                             {/* Mobile Tabs - STICKY TOP */}
                             <div className="flex md:hidden sticky top-0 z-20 bg-white/40 dark:bg-black/40 backdrop-blur-xl border-b dark:border-white/10 border-black/10 p-2 gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
                                 <button onClick={() => setMailFolder('inbox')} className={`flex-1 py-2.5 rounded-[16px] text-xs font-bold uppercase tracking-wide transition-all border ${mailFolder === 'inbox' ? 'bg-white/60 dark:bg-black/60 text-orange-600 border-orange-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_2px_10px_rgba(0,0,0,0.05)]' : 'border-transparent text-neutral-500 bg-black/5 dark:bg-white/5'}`}>
@@ -1033,9 +1030,7 @@ const App: React.FC = () => {
                                             onClick={() => setSelectedEmail(email)}
                                             className="group flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 p-4 md:px-6 md:py-5 border-b dark:border-white/5 border-black/5 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-all md:hover:pl-7 border-l-4 border-l-transparent md:hover:border-l-orange-500 active:bg-black/10 dark:active:bg-white/10"
                                         >
-                                            {/* Avatar / Checkbox Area */}
                                             <div className="flex items-center gap-3 w-full md:w-56 shrink-0 min-w-0">
-                                                {/* Mobile Layout: Avatar + Name + Date Top Row */}
                                                 <div className="w-10 h-10 md:w-9 md:h-9 shrink-0 rounded-full dark:bg-white/5 bg-black/5 text-neutral-600 dark:text-neutral-400 flex items-center justify-center text-xs font-bold font-tech uppercase border dark:border-white/10 border-black/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
                                                     {email.from.substring(0, 2)}
                                                 </div>
@@ -1046,14 +1041,12 @@ const App: React.FC = () => {
                                                         </span>
                                                         <span className="text-[10px] text-neutral-400 font-mono md:hidden whitespace-nowrap ml-2 shrink-0">{new Date(email.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                                                     </div>
-                                                    {/* Mobile Subject Preview directly under name */}
                                                     <div className="md:hidden text-sm dark:text-neutral-200 text-neutral-800 font-medium truncate mt-0.5 min-w-0">
                                                         {email.subject || '(Sans objet)'}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Content Desktop */}
                                             <div className="hidden md:flex flex-1 min-w-0 items-center gap-4">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <span className="text-sm dark:text-neutral-200 text-neutral-800 font-medium truncate">{email.subject || '(Sans objet)'}</span>
@@ -1062,12 +1055,10 @@ const App: React.FC = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Mobile Snippet (3rd Line) */}
                                             <p className="text-xs text-neutral-500 line-clamp-2 md:hidden pl-[52px] -mt-1 leading-relaxed w-full">
                                                 {email.snippet}
                                             </p>
 
-                                            {/* Meta & Actions Desktop */}
                                             <div className="hidden md:flex items-center gap-4 shrink-0 ml-auto">
                                                 {email.attachments && email.attachments.length > 0 && (
                                                     <span className="px-2 py-0.5 rounded bg-neutral-100 dark:bg-[#222] border border-neutral-200 dark:border-[#333] text-[10px] font-bold text-neutral-500 flex items-center gap-1">
@@ -1093,31 +1084,29 @@ const App: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            );
-        }
 
-        // === GUIDE VIEW ===
-        // The 'guide' category UI has been removed to be fully migrated into Header's Search Bubble
+                {/* === QUALIREPAR VIEW === */}
+                <div className={`${activeCategory === 'qualirepar' ? 'block' : 'hidden'} w-full h-full`}>
+                    <QualiReparForm onShowToast={handleShowToast} userId={user?.uid || ''} />
+                </div>
 
-        // === QUALIREPAR VIEW ===
-        if (activeCategory === 'qualirepar') {
-            return <QualiReparForm onShowToast={handleShowToast} userId={user?.uid || ''} />;
-        }
+                {/* === STOCK VIEW === */}
+                <div className={`${activeCategory === 'stock' ? 'block' : 'hidden'} w-full h-full`}>
+                    <StockView isDarkMode={isDarkMode} isScrolled={isScrolled} />
+                </div>
 
-        // === STOCK VIEW ===
-        if (activeCategory === 'stock') {
-            return <StockView isDarkMode={isDarkMode} isScrolled={isScrolled} />;
-        }
+                {/* === COLIS VIEW === */}
+                <div className={`${activeCategory === 'colis' ? 'block' : 'hidden'} w-full h-full`}>
+                    <ColisView isDarkMode={isDarkMode} isScrolled={isScrolled} />
+                </div>
 
-        // === INTAKE FORM VIEW ===
-        if (activeCategory === 'intake') {
-            return <IntakeForm onShowToast={handleShowToast} userId={user?.uid || ''} />;
-        }
+                {/* === INTAKE FORM VIEW === */}
+                <div className={`${activeCategory === 'intake' ? 'block' : 'hidden'} w-full h-full`}>
+                    <IntakeForm onShowToast={handleShowToast} userId={user?.uid || ''} />
+                </div>
 
-        // === CONTACTS VIEW ===
-        if (activeCategory === 'contacts') {
-            return (
-                <>
+                {/* === CONTACTS VIEW === */}
+                <div className={`${activeCategory === 'contacts' ? 'block' : 'hidden'} w-full h-full`}>
                     <div className="flex items-center gap-4 md:gap-5 mb-6 md:mb-10 pl-2">
                         <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center dark:bg-white bg-black dark:text-black text-white rounded-full transition-colors"><FaAddressBook className="text-base md:text-lg" /></div>
                         <h2 className="text-2xl md:text-3xl font-tech font-bold dark:text-white text-black tracking-tighter uppercase transition-colors">Répertoire</h2>
@@ -1132,28 +1121,26 @@ const App: React.FC = () => {
                             </div>
                         )}
                     </div>
-                </>
-            );
-        }
+                </div>
 
-        // Default Procedures View
-        return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-24 lg:pb-20">
-                {filteredProcedures.map(p => (
-                    <ProcedureCard
-                        key={p.id}
-                        procedure={p}
-                        onClick={setSelectedProcedure}
-                        isPinned={pinnedProcedures.includes(p.id)}
-                        onTogglePin={() => togglePin(p.id)}
-                    />
-                ))}
-                {filteredProcedures.length === 0 && (
-                    <div className="col-span-full text-center py-32 dark:text-neutral-700 text-neutral-400 font-tech text-xl uppercase tracking-widest">
-                    // AUCUNE_PROCEDURE_TROUVEE //
-                    </div>
-                )}
-            </div>
+                {/* === PROCEDURES VIEW === */}
+                <div className={`${activeCategory === 'all' ? 'grid' : 'hidden'} grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-24 lg:pb-20`}>
+                    {filteredProcedures.map(p => (
+                        <ProcedureCard
+                            key={p.id}
+                            procedure={p}
+                            onClick={setSelectedProcedure}
+                            isPinned={pinnedProcedures.includes(p.id)}
+                            onTogglePin={() => togglePin(p.id)}
+                        />
+                    ))}
+                    {filteredProcedures.length === 0 && (
+                        <div className="col-span-full text-center py-32 dark:text-neutral-700 text-neutral-400 font-tech text-xl uppercase tracking-widest">
+                        // AUCUNE_PROCEDURE_TROUVEE //
+                        </div>
+                    )}
+                </div>
+            </>
         );
     };
 

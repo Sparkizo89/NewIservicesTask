@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User } from 'firebase/auth';
 
-import { FaBolt, FaMoon, FaSun, FaLayerGroup, FaAddressBook, FaBookOpen, FaEnvelope, FaFileSignature, FaMagnifyingGlass, FaXmark, FaWandMagicSparkles, FaRotate, FaClipboardList, FaBoxOpen, FaArrowRightFromBracket, FaGoogle } from 'react-icons/fa6';
+import { FaBolt, FaMoon, FaSun, FaLayerGroup, FaAddressBook, FaBookOpen, FaEnvelope, FaFileSignature, FaMagnifyingGlass, FaXmark, FaWandMagicSparkles, FaRotate, FaClipboardList, FaBoxOpen, FaArrowRightFromBracket, FaGoogle, FaBox } from 'react-icons/fa6';
 import { motion, AnimatePresence } from 'motion/react';
 import ScrambleText from './ScrambleText';
 import { ProcedureCategory } from '../types';
@@ -27,6 +27,7 @@ interface HeaderProps {
 const navItems = [
     { id: 'all', label: 'Procédures', icon: FaLayerGroup },
     { id: 'stock', label: 'Stock', icon: FaBoxOpen },
+    { id: 'colis', label: 'Colis', icon: FaBox },
     { id: 'qualirepar', label: 'QualiRépar', icon: FaFileSignature },
     { id: 'intake', label: 'Tickets', icon: FaClipboardList },
     { id: 'contacts', label: 'Contacts', icon: FaAddressBook },
@@ -81,15 +82,15 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeCategory
             <div className="max-w-[1600px] mx-auto w-full flex flex-row items-center justify-between gap-4 md:gap-0">
 
                 {/* LEFT COLUMN: LOGO */}
-                <div className={`flex items-center gap-3 md:gap-4 group cursor-default w-auto md:w-[250px] justify-start shrink-0 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto ${isScrolled ? '-translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
+                <div className={`flex items-center gap-2 md:gap-3 group cursor-default w-[160px] md:w-auto md:flex-[0.5] justify-start transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto ${isScrolled ? '-translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
                     <div className="relative">
                         <div className="w-10 h-10 md:w-12 md:h-12 border dark:border-[#333] border-neutral-300 dark:bg-[#0a0a0a] bg-neutral-100 flex items-center justify-center text-orange-600 rounded-full group-hover:bg-orange-600 group-hover:text-black transition-colors duration-300">
                             <FaBolt className="text-lg md:text-xl" />
                         </div>
                         <div className="absolute -top-1 -right-1 w-2.5 h-2.5 md:w-3 md:h-3 dark:bg-white bg-black rounded-full border-2 dark:border-black border-white"></div>
                     </div>
-                    <div className="flex flex-col justify-center h-full w-[150px] md:w-[200px]"> {/* Fixed width to prevent layout shift */}
-                        <h1 className="text-xl md:text-3xl font-tech dark:text-white text-black tracking-tighter uppercase leading-none transition-colors whitespace-nowrap">
+                    <div className="flex flex-col justify-center h-full min-w-[120px] md:min-w-[140px]"> {/* Preventing layout shift while allowing flex */}
+                        <h1 className="text-lg md:text-xl lg:text-2xl font-tech dark:text-white text-black tracking-tighter uppercase leading-none transition-colors whitespace-nowrap">
                             <ScrambleText text="iServices" trigger={scrambleTitle} />
                             <span className="text-neutral-500">
                                 <ScrambleText text=".task" trigger={scrambleTitle} />
@@ -103,7 +104,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeCategory
                 </div>
 
                 {/* CENTER COLUMN: NAVBAR & SEARCH (BOTTOM BAR ON MOBILE) */}
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 md:static md:translate-x-0 md:flex-[1.2] md:justify-center md:pl-20 md:gap-4 md:translate-y-1 lg:translate-y-1.5 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto">
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 md:static md:translate-x-0 md:flex-1 md:justify-center md:gap-3 md:translate-y-1 lg:translate-y-1.5 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto">
                     {/* Liquid Glass Navbar */}
                     <nav className={`elastic-group flex items-center rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.05)] border p-1 relative overflow-visible transition-all duration-500 ${isScrolled ? 'backdrop-blur-sm dark:bg-[#1a1a1a]/40 bg-white/40 dark:border-white/10 border-black/10 shadow-md' : 'backdrop-blur-xl dark:bg-[#1a1a1a]/40 bg-white/40 dark:border-[#333]/50 border-white/60'} ${isSearchExpanded ? 'hidden md:flex' : 'flex'}`}>
                         {navItems.map((item) => {
@@ -114,7 +115,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeCategory
                                     onClick={() => {
                                         onSelectCategory(item.id as ProcedureCategory);
                                     }}
-                                    className={`relative flex items-center justify-center gap-2 px-4 lg:px-5 py-3 lg:py-3 text-[14px] lg:text-sm font-tech uppercase tracking-widest transition-colors z-10 pointer-events-auto ${isActive
+                                    className={`relative flex items-center justify-center gap-1.5 px-2 lg:px-2.5 xl:px-2 py-1.5 lg:py-2 text-[10px] lg:text-[11px] xl:text-[11px] font-tech uppercase tracking-widest transition-colors z-10 pointer-events-auto ${isActive
                                         ? 'text-white font-bold drop-shadow-md'
                                         : 'text-neutral-500 hover:text-black dark:hover:text-white font-medium'
                                         }`}
@@ -127,9 +128,9 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeCategory
                                         />
                                     )}
                                     <motion.div animate={{ scale: isActive ? 1.15 : 1 }} transition={{ type: "spring", bounce: 0.4 }}>
-                                        <item.icon className="text-xl lg:text-lg mb-0.5" />
+                                        <item.icon className="text-lg lg:text-[15px] mb-0.5" />
                                     </motion.div>
-                                    <span className="hidden xl:block">{item.label}</span>
+                                    <span className="hidden lg:block whitespace-nowrap">{item.label}</span>
                                 </button>
                             );
                         })}
@@ -212,7 +213,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeCategory
                 </div>
 
                 {/* RIGHT COLUMN: CONTROLS (THEME TOGGLE & AUTH) */}
-                <div className={`flex items-center gap-4 md:gap-4 w-auto md:w-[350px] justify-end shrink-0 absolute right-4 top-4 md:static md:inset-auto transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto ${isScrolled ? '-translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
+                <div className={`flex items-center gap-2 md:gap-3 w-auto md:flex-[0.5] justify-end absolute right-4 top-4 md:static md:inset-auto transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-auto ${isScrolled ? '-translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
                     
                     {/* Auth Section */}
                     {user ? (
@@ -225,7 +226,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeCategory
                                 </div>
                                 <div className="hidden lg:flex flex-col leading-tight">
                                     <span className="text-[9px] dark:text-neutral-500 text-neutral-400 font-tech uppercase tracking-widest">Connecté</span>
-                                    <span className="text-[12px] dark:text-white text-black font-bold font-tech">{user.displayName?.split(' ')[0]}</span>
+                                    <span className="text-[11px] lg:text-[12px] dark:text-white text-black font-bold font-tech truncate max-w-[70px]">{user.displayName?.split(' ') [0]}</span>
                                 </div>
                                 <svg className="w-3 h-3 dark:text-neutral-500 text-neutral-400 ml-0.5 hidden lg:block transition-transform duration-300 group-hover/auth:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
                             </div>
