@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "iservices-task-840dd"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

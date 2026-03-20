@@ -159,11 +159,14 @@ const SafeEmailFrame: React.FC<{ html: string; isDarkMode: boolean }> = ({ html,
 
 import MobileSignature from './components/MobileSignature';
 
+// ============================================================
+// ROOT ROUTER - Handles routing BEFORE any hooks
+// This is needed because hooks cannot be called after a conditional return
+// ============================================================
 const App: React.FC = () => {
-    // Simple Routing for Mobile Signature
-    const [currentPath, setCurrentPath] = useState(window.location.pathname);
+    const [currentPath, setCurrentPath] = React.useState(window.location.pathname);
 
-    useEffect(() => {
+    React.useEffect(() => {
         const handlePopState = () => setCurrentPath(window.location.pathname);
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
@@ -174,6 +177,13 @@ const App: React.FC = () => {
         return <SignaturePage sessionId={sessionId} />;
     }
 
+    return <MainApp />;
+};
+
+// ============================================================
+// MAIN APP - All application logic and hooks live here (after routing)
+// ============================================================
+const MainApp: React.FC = () => {
 
     const [activeCategory, setActiveCategory] = useState<ProcedureCategory>('all');
     const [searchQuery, setSearchQuery] = useState('');
