@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as Fa6Icons from 'react-icons/fa6';
 import { Procedure } from '../types';
 import ScrambleText from './ScrambleText';
+import MarqueeText from './MarqueeText';
 
 interface ProcedureCardProps {
   procedure: Procedure;
@@ -94,10 +95,10 @@ const ProcedureCard: React.FC<ProcedureCardProps> = ({ procedure, onClick, isPin
 
       {/* Content */}
       <div className="relative z-10">
-        <h3 className="font-tech text-2xl dark:text-white text-black mb-3 uppercase tracking-tight leading-none group-hover:text-orange-500 transition-colors">
-          {procedure.title}
+        <h3 className="font-tech text-xl dark:text-white text-black mb-3 uppercase tracking-tight leading-none group-hover:text-orange-500 transition-colors">
+          <MarqueeText text={procedure.title} className="font-tech text-xl dark:text-white text-black uppercase tracking-tight leading-none group-hover:text-orange-500 transition-colors" speed={35} />
         </h3>
-        <p className="text-sm font-sans text-neutral-500 leading-relaxed border-l-2 dark:border-[#262626] border-neutral-300 pl-3 group-hover:border-orange-600/50 transition-colors">
+        <p className="text-sm font-sans text-neutral-500 leading-relaxed border-l-2 dark:border-[#262626] border-neutral-300 pl-3 group-hover:border-orange-600/50 transition-colors line-clamp-2">
           {procedure.desc}
         </p>
       </div>

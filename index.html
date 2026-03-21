@@ -2,7 +2,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <title>iServices Task</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -95,6 +95,12 @@
 
         ::-webkit-scrollbar-thumb:hover {
             background: var(--nothing-accent);
+        }
+
+        /* Marquee Scroll — used by MarqueeText component */
+        @keyframes marquee-scroll {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
 
         /* Animations */

@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { useElasticButtons } from './hooks/useElasticButtons';
 import Header from './components/Header';
+import BottomNavBar from './components/BottomNavBar';
 import ProcedureCard from './components/ProcedureCard';
 import ContactCard from './components/ContactCard';
 import Modal from './components/Modal';
@@ -1121,7 +1122,7 @@ const MainApp: React.FC = () => {
                         <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center dark:bg-white bg-black dark:text-black text-white rounded-full transition-colors"><FaAddressBook className="text-base md:text-lg" /></div>
                         <h2 className="text-2xl md:text-3xl font-tech font-bold dark:text-white text-black tracking-tighter uppercase transition-colors">Répertoire</h2>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-24 lg:pb-20">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 pb-24 lg:pb-20">
                         {filteredContacts.map(c => (
                             <ContactCard key={c.id} contact={c} />
                         ))}
@@ -1134,7 +1135,7 @@ const MainApp: React.FC = () => {
                 </div>
 
                 {/* === PROCEDURES VIEW === */}
-                <div className={`${activeCategory === 'all' ? 'grid' : 'hidden'} grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-24 lg:pb-20`}>
+                <div className={`${activeCategory === 'all' ? 'grid' : 'hidden'} grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 pb-24 lg:pb-20`}>
                     {filteredProcedures.map(p => (
                         <ProcedureCard
                             key={p.id}
@@ -1261,7 +1262,7 @@ const MainApp: React.FC = () => {
             </div>
 
             <main
-                className="flex-1 overflow-y-auto w-full h-full relative scrollbar-thin pt-20 pb-24 md:pt-32 md:pb-0 lg:p-10 lg:pt-32 print:overflow-visible print:p-0 print:pt-0 print:block print:h-auto print:static"
+                className="flex-1 overflow-y-auto w-full h-full relative scrollbar-thin pt-16 pb-28 md:pt-32 md:pb-0 lg:p-10 lg:pt-32 print:overflow-visible print:p-0 print:pt-0 print:block print:h-auto print:static"
                 onScroll={(e) => {
                     setIsScrolled(e.currentTarget.scrollTop > 10);
                 }}
@@ -1286,6 +1287,12 @@ const MainApp: React.FC = () => {
                     onShowToast={handleShowToast}
                 />
             )}
+
+            {/* Mobile Bottom Navigation Bar */}
+            <BottomNavBar
+                activeCategory={activeCategory}
+                onSelectCategory={setActiveCategory}
+            />
 
             <Toast
                 message={toastMessage}

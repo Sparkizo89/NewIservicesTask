@@ -1,6 +1,7 @@
 import React from 'react';
 import * as Fa6Icons from 'react-icons/fa6';
 import { ContactItem } from '../types';
+import MarqueeText from './MarqueeText';
 
 interface ContactCardProps {
   contact: ContactItem;
@@ -40,9 +41,13 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact }) => {
           <Icon />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-tech text-xl dark:text-white text-black uppercase tracking-wider truncate">{contact.role}</h3>
-          <div className="h-0.5 w-8 bg-orange-600 mt-2 group-hover:w-full transition-all duration-500"></div>
-        </div>
+            <MarqueeText
+              text={contact.role}
+              className="font-tech text-xl dark:text-white text-black uppercase tracking-wider"
+              speed={35}
+            />
+            <div className="h-0.5 w-8 bg-orange-600 mt-2 group-hover:w-full transition-all duration-500"></div>
+          </div>
       </div>
 
       <div className="space-y-6 flex-1 relative z-10">
@@ -71,8 +76,8 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact }) => {
         {contact.cc && (
           <div>
             <span className="text-[9px] font-tech text-neutral-500 uppercase tracking-widest block mb-1">Liste_CC</span>
-            <div className="text-[10px] font-mono text-neutral-500 dark:bg-black/30 bg-white/50 backdrop-blur-sm shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] p-2 rounded border dark:border-white/5 border-black/5 truncate">
-              {contact.cc}
+            <div className="text-[10px] font-mono text-neutral-500 dark:bg-black/30 bg-white/50 backdrop-blur-sm shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] p-2 rounded border dark:border-white/5 border-black/5 overflow-hidden">
+              <MarqueeText text={contact.cc} className="text-[10px] font-mono text-neutral-500" speed={30} />
             </div>
           </div>
         )}
