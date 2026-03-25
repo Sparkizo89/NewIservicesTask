@@ -6,9 +6,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from '@google/genai';
 import { FaBox, FaUpload, FaCamera, FaCircleCheck, FaTriangleExclamation, FaTrash, FaMagnifyingGlass, FaBarcode, FaRotate } from 'react-icons/fa6';
 
-// Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
-
 interface StockItem {
     'Réf. Article': string;
     'Description': string;
@@ -173,6 +170,14 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                             reader.readAsDataURL(img);
                         });
                     }));
+
+                    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+                    if (!apiKey) {
+                        alert("Veuillez configurer VITE_GEMINI_API_KEY dans votre fichier .env");
+                        setIsUploading(false);
+                        return;
+                    }
+                    const ai = new GoogleGenAI({ apiKey });
 
                     const response = await ai.models.generateContent({
                         model: 'gemini-3-flash-preview',
