@@ -10,7 +10,7 @@ import { FaBox, FaUpload, FaCamera, FaCircleCheck, FaTriangleExclamation, FaTras
 const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 interface StockItem {
-    'Code Article': string;
+    'Réf. Article': string;
     'Description': string;
     'Code à Barres'?: string;
     'Prix Unitaire'?: string;
@@ -62,6 +62,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                     Papa.parse<StockItem>(csvText, {
                         header: true,
                         skipEmptyLines: true,
+                        delimiter: ";",
                         complete: (results) => setInventory(results.data)
                     });
                 }
@@ -85,13 +86,13 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
         const mergedItems: ColisItem[] = items.map(extracted => {
             // Find in inventory to get the exact barcode
             const match = inventory.find(inv => 
-                inv['Code Article']?.toLowerCase() === extracted.reference.toLowerCase() ||
+                inv['Réf. Article']?.toLowerCase() === extracted.reference.toLowerCase() ||
                 inv['Code à Barres']?.toLowerCase() === extracted.reference.toLowerCase()
             );
 
             return {
-                id: match?.['Code à Barres'] || match?.['Code Article'] || extracted.reference,
-                reference: match?.['Code Article'] || extracted.reference,
+                id: match?.['Code à Barres'] || match?.['Réf. Article'] || extracted.reference,
+                reference: match?.['Réf. Article'] || extracted.reference,
                 description: match?.['Description'] || extracted.description,
                 barcode: match?.['Code à Barres'],
                 expectedQuantity: extracted.quantity,
@@ -129,7 +130,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                     complete: (results) => {
                         // Very basic generic mapping, assuming columns 'Reference'/'Code' and 'Quantity'/'Qte'
                         const items = results.data.map((row: any) => ({
-                            reference: row['Reference'] || row['Code Article'] || row['Code'] || '',
+                            reference: row['Reference'] || row['Réf. Article'] || row['Code'] || '',
                             description: row['Description'] || row['Nom'] || '',
                             quantity: parseInt(row['Quantite'] || row['Quantité'] || row['Qte'] || row['Quantity'] || '1', 10) || 1
                         })).filter(item => item.reference);
@@ -144,7 +145,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                 const data = XLSX.utils.sheet_to_json(worksheet) as any[];
                 
                 const items = data.map((row: any) => ({
-                    reference: row['Reference'] || row['Code Article'] || row['Code'] || '',
+                    reference: row['Reference'] || row['Réf. Article'] || row['Code'] || '',
                     description: row['Description'] || row['Nom'] || '',
                     quantity: parseInt(row['Quantite'] || row['Quantité'] || row['Qte'] || row['Quantity'] || '1', 10) || 1
                 })).filter(item => item.reference);
@@ -232,12 +233,12 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                 // Try to identify it from the general inventory
                 const invMatch = inventory.find(inv => 
                     inv['Code à Barres']?.toLowerCase() === scannedCode || 
-                    inv['Code Article']?.toLowerCase() === scannedCode
+                    inv['Réf. Article']?.toLowerCase() === scannedCode
                 );
 
                 const newItem: ColisItem = {
-                    id: invMatch?.['Code à Barres'] || invMatch?.['Code Article'] || scannedCode,
-                    reference: invMatch?.['Code Article'] || scannedCode,
+                    id: invMatch?.['Code à Barres'] || invMatch?.['Réf. Article'] || scannedCode,
+                    reference: invMatch?.['Réf. Article'] || scannedCode,
                     description: invMatch?.['Description'] || 'Article Inconnu (Hors Liste)',
                     barcode: invMatch?.['Code à Barres'] || scannedCode,
                     expectedQuantity: 0, // 0 expected means it's an Extra
@@ -245,6 +246,28 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                 };
                 return [newItem, ...prev]; // Put extra items at the top
             }
+        });
+    };
+
+    const handleUpdateScannedQuantity = (id: string, newQuantity: number) => {
+        if (newQuantity < 0) return;
+        setExpectedItems(prev => prev.map(item => 
+            item.id === id ? { ...item, scannedQuantity: newQuantity } : item
+        ));
+    };
+
+    const handleRemoveScannedItem = (id: string) => {
+        setExpectedItems(prev => {
+            const item = prev.find(p => p.id === id);
+            if (!item) return prev;
+            // If it's an extra item (expected 0), completely remove it
+            if (item.expectedQuantity === 0) {
+                return prev.filter(p => p.id !== id);
+            }
+            // If it's an expected item, just reset its scanned quantity to 0
+            return prev.map(p => 
+                p.id === id ? { ...item, scannedQuantity: 0 } : p
+            );
         });
     };
 
@@ -436,16 +459,37 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                                                     exit={{ opacity: 0, scale: 0.95 }}
                                                     className="flex items-center justify-between p-4 dark:bg-[#1a1a1a]/40 bg-white/40 backdrop-blur-lg border border-red-500/30 rounded-2xl shadow-sm"
                                                 >
-                                                    <div className="flex flex-col min-w-0 flex-1">
+                                                    <div className="flex flex-col min-w-0 flex-1 pr-4">
                                                         <span className="font-bold font-sans dark:text-white text-black truncate">{item.description}</span>
                                                         <div className="flex gap-2 text-[10px] font-tech uppercase text-neutral-500">
                                                             <span>{item.reference}</span>
                                                             {item.barcode && <span>• EAN: {item.barcode}</span>}
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-baseline gap-1 shrink-0 bg-red-500/10 px-3 py-1 rounded-lg border border-red-500/20">
-                                                        <span className="text-red-500 font-bold font-tech text-lg">{item.scannedQuantity}</span>
-                                                        <span className="text-red-400 font-tech text-xs">/ {item.expectedQuantity}</span>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        {item.scannedQuantity > 0 && (
+                                                            <button 
+                                                                onClick={() => handleRemoveScannedItem(item.id)}
+                                                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-100 dark:bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                                                            >
+                                                                <FaTrash className="text-xs" />
+                                                            </button>
+                                                        )}
+                                                        <div className="flex items-center gap-1 bg-red-500/10 p-1 rounded-xl border border-red-500/20">
+                                                            <button 
+                                                                onClick={() => handleUpdateScannedQuantity(item.id, item.scannedQuantity - 1)}
+                                                                disabled={item.scannedQuantity === 0}
+                                                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-[#222] text-black dark:text-white shadow-sm active:scale-95 transition-transform disabled:opacity-50"
+                                                            >-</button>
+                                                            <div className="flex items-baseline gap-1 px-2 min-w-[3rem] justify-center text-center">
+                                                                <span className="text-red-500 font-bold font-tech text-lg">{item.scannedQuantity}</span>
+                                                                <span className="text-red-400 font-tech text-xs">/ {item.expectedQuantity}</span>
+                                                            </div>
+                                                            <button 
+                                                                onClick={() => handleUpdateScannedQuantity(item.id, item.scannedQuantity + 1)}
+                                                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-500 text-white shadow-sm active:scale-95 transition-transform"
+                                                            >+</button>
+                                                        </div>
                                                     </div>
                                                 </motion.div>
                                             ))}
@@ -470,15 +514,34 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                                                     animate={{ opacity: 1, y: 0 }}
                                                     className="flex items-center justify-between p-4 dark:bg-orange-900/10 bg-orange-50 border border-orange-500/40 rounded-2xl shadow-sm"
                                                 >
-                                                    <div className="flex flex-col min-w-0 flex-1">
+                                                    <div className="flex flex-col min-w-0 flex-1 pr-4">
                                                         <span className="font-bold font-sans dark:text-white text-black truncate">{item.description}</span>
                                                         <div className="flex gap-2 text-[10px] font-tech uppercase text-neutral-500">
                                                             <span>{item.reference}</span>
                                                             {item.expectedQuantity === 0 && <span className="text-orange-500 font-bold">• Hors Liste</span>}
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-baseline gap-1 shrink-0 bg-orange-500 text-white px-3 py-1 rounded-lg shadow-md">
-                                                        <span className="font-bold font-tech text-lg">+{item.scannedQuantity - item.expectedQuantity}</span>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <button 
+                                                            onClick={() => handleRemoveScannedItem(item.id)}
+                                                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-500/20 text-orange-600 hover:bg-orange-500 hover:text-white transition-colors"
+                                                        >
+                                                            <FaTrash className="text-xs" />
+                                                        </button>
+                                                        <div className="flex items-center gap-1 bg-orange-500/10 p-1 rounded-xl border border-orange-500/20">
+                                                            <button 
+                                                                onClick={() => handleUpdateScannedQuantity(item.id, item.scannedQuantity - 1)}
+                                                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-[#222] text-black dark:text-white shadow-sm active:scale-95 transition-transform"
+                                                            >-</button>
+                                                            <div className="flex items-baseline gap-1 px-2 min-w-[3rem] justify-center text-center">
+                                                                <span className="font-bold font-tech text-lg text-orange-600 dark:text-orange-400">+{item.scannedQuantity - item.expectedQuantity}</span>
+                                                                {item.expectedQuantity > 0 && <span className="text-orange-400 font-tech text-xs ml-1">/ {item.expectedQuantity}</span>}
+                                                            </div>
+                                                            <button 
+                                                                onClick={() => handleUpdateScannedQuantity(item.id, item.scannedQuantity + 1)}
+                                                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-orange-500 text-white shadow-sm active:scale-95 transition-transform"
+                                                            >+</button>
+                                                        </div>
                                                     </div>
                                                 </motion.div>
                                             ))}
@@ -501,12 +564,27 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                                                     layout
                                                     initial={{ opacity: 0, y: 10 }}
                                                     animate={{ opacity: 1, y: 0 }}
-                                                    className="flex items-center justify-between p-3 px-4 dark:bg-green-900/10 bg-green-50 border border-green-500/30 rounded-2xl"
+                                                    className="group flex items-center justify-between p-3 px-4 dark:bg-green-900/10 bg-green-50 border border-green-500/30 rounded-2xl"
                                                 >
-                                                    <div className="flex flex-col min-w-0 flex-1">
+                                                    <div className="flex flex-col min-w-0 flex-1 pr-4">
                                                         <span className="font-sans dark:text-white text-black text-sm line-through decoration-green-500/40">{item.description}</span>
                                                     </div>
-                                                    <FaCircleCheck className="text-green-500" />
+                                                    <div className="flex items-center gap-3 shrink-0">
+                                                        <div className="flex items-center gap-1 bg-green-500/10 p-1 rounded-xl border border-green-500/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button 
+                                                                onClick={() => handleUpdateScannedQuantity(item.id, item.scannedQuantity - 1)}
+                                                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-[#222] text-black dark:text-white shadow-sm active:scale-95 transition-transform"
+                                                            >-</button>
+                                                            <div className="flex items-baseline gap-1 px-2 min-w-[2rem] justify-center text-center">
+                                                                <span className="text-green-600 dark:text-green-400 font-bold font-tech text-sm">{item.scannedQuantity}</span>
+                                                            </div>
+                                                            <button 
+                                                                onClick={() => handleUpdateScannedQuantity(item.id, item.scannedQuantity + 1)}
+                                                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-500 text-white shadow-sm active:scale-95 transition-transform"
+                                                            >+</button>
+                                                        </div>
+                                                        <FaCircleCheck className="text-green-500 text-xl" />
+                                                    </div>
                                                 </motion.div>
                                             ))}
                                         </AnimatePresence>

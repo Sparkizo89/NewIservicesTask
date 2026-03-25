@@ -9,7 +9,7 @@ import { db } from '../firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 
 interface StockItem {
-    'Code Article': string;
+    'Réf. Article': string;
     'Description': string;
     'Existance': string;
     'Inventaire de Sécurité': string;
@@ -70,6 +70,7 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
                 Papa.parse<StockItem>(csvText, {
                     header: true,
                     skipEmptyLines: true,
+                    delimiter: ";",
                     complete: (results) => {
                         setInventory(results.data);
                         setIsLoading(false);
@@ -101,7 +102,7 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
         // Exact match first (Barcode or Article Code)
         let exactMatch = inventory.find(item => 
             (item['Code à Barres'] && item['Code à Barres'].toLowerCase() === term) ||
-            (item['Code Article'] && item['Code Article'].toLowerCase() === term)
+            (item['Réf. Article'] && item['Réf. Article'].toLowerCase() === term)
         );
 
         if (isInventoryMode) {
@@ -109,10 +110,10 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
             if (exactMatch) {
                 // Check if already in session
                 setInventorySession(prev => {
-                    const exists = prev.find(p => p['Code Article'] === exactMatch!['Code Article']);
+                    const exists = prev.find(p => p['Réf. Article'] === exactMatch!['Réf. Article']);
                     if (exists) {
                         return prev.map(p => 
-                            p['Code Article'] === exactMatch!['Code Article'] 
+                            p['Réf. Article'] === exactMatch!['Réf. Article'] 
                             ? { ...p, scannedQuantity: p.scannedQuantity + 1 } 
                             : p
                         );
@@ -159,7 +160,7 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
         const found = inventory.filter(item => {
             // Exact match for barcodes and article codes
             if (item['Code à Barres'] && item['Code à Barres'].toLowerCase() === term) return true;
-            if (item['Code Article'] && item['Code Article'].toLowerCase() === term) return true;
+            if (item['Réf. Article'] && item['Réf. Article'].toLowerCase() === term) return true;
             
             // Fuzzy match for description (all terms must be present)
             if (item['Description']) {
@@ -244,7 +245,7 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
             else if (diff < 0) ecartLabel = `${diff} (manquant)`;
             
             return {
-                'Code Article': item['Code Article'],
+                'Réf. Article': item['Réf. Article'],
                 'Code à Barres': item['Code à Barres'] || '',
                 'Description': item.Description,
                 'Quantité Inventoriée': item.scannedQuantity,
@@ -259,12 +260,12 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
     const handleUpdateQuantity = (codeArticle: string, newQuantity: number) => {
         if (newQuantity < 1) return;
         setInventorySession(prev => prev.map(item => 
-            item['Code Article'] === codeArticle ? { ...item, scannedQuantity: newQuantity } : item
+            item['Réf. Article'] === codeArticle ? { ...item, scannedQuantity: newQuantity } : item
         ));
     };
 
     const handleRemoveItem = (codeArticle: string) => {
-        setInventorySession(prev => prev.filter(item => item['Code Article'] !== codeArticle));
+        setInventorySession(prev => prev.filter(item => item['Réf. Article'] !== codeArticle));
     };
 
     const handleClearInventory = () => {
@@ -306,7 +307,9 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
 
     // Calculate status colors based on inventory levels
     const getStockStatus = (existanceStr: string) => {
-        const existance = parseFloat(existanceStr?.replace(',', '.') || '0');
+        // Treat empty string or null as '0'
+        const rawValue = (!existanceStr || existanceStr.trim() === '') ? '0' : existanceStr;
+        const existance = parseFloat(rawValue.replace(',', '.'));
         
         if (isNaN(existance)) return { color: 'text-neutral-500', bg: 'bg-neutral-100 dark:bg-neutral-800', label: 'Inconnu' };
 
@@ -536,13 +539,13 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
                                     ) : (
                                         <div className="overflow-y-auto max-h-[600px] styled-scrollbar">
                                             {inventorySession.map((item, index) => (
-                                                <div key={item['Code Article']} className={`group relative flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 md:p-6 border-b dark:border-white/10 border-black/5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${index === inventorySession.length - 1 ? 'border-b-0' : ''}`}>
+                                                <div key={item['Réf. Article']} className={`group relative flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 md:p-6 border-b dark:border-white/10 border-black/5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${index === inventorySession.length - 1 ? 'border-b-0' : ''}`}>
                                                     
                                                     {/* Details */}
                                                     <div className="flex-1 z-10 w-full md:w-auto">
                                                         <div className="flex flex-wrap items-center gap-3 mb-1.5">
                                                             <div className="text-xs font-mono font-bold tracking-wider text-neutral-400 dark:text-neutral-500">
-                                                                {item['Code Article']}
+                                                                {item['Réf. Article']}
                                                             </div>
                                                             {item['Code à Barres'] && (
                                                                 <div className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 text-[10px] font-mono tracking-wider text-neutral-500">
@@ -582,7 +585,7 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
                                                         
                                                         {/* Delete Button */}
                                                         <button 
-                                                            onClick={() => handleRemoveItem(item['Code Article'])}
+                                                            onClick={() => handleRemoveItem(item['Réf. Article'])}
                                                             className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
                                                         >
                                                             <FaTrash />
@@ -591,7 +594,7 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
                                                         {/* Quantity Input */}
                                                         <div className="flex items-center gap-2 bg-neutral-100 dark:bg-black/40 p-1.5 rounded-xl border border-black/5 dark:border-white/5">
                                                             <button 
-                                                                onClick={() => handleUpdateQuantity(item['Code Article'], item.scannedQuantity - 1)}
+                                                                onClick={() => handleUpdateQuantity(item['Réf. Article'], item.scannedQuantity - 1)}
                                                                 className="w-8 h-8 flex items-center justify-center rounded-lg bg-white dark:bg-[#222] text-black dark:text-white shadow-sm active:scale-95 transition-transform"
                                                             >
                                                                 -
@@ -599,11 +602,11 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
                                                             <input 
                                                                 type="number"
                                                                 value={item.scannedQuantity}
-                                                                onChange={(e) => handleUpdateQuantity(item['Code Article'], parseInt(e.target.value) || 1)}
+                                                                onChange={(e) => handleUpdateQuantity(item['Réf. Article'], parseInt(e.target.value) || 1)}
                                                                 className="w-12 h-8 text-center bg-transparent font-tech font-bold text-lg outline-none flex-shrink-0"
                                                             />
                                                             <button 
-                                                                onClick={() => handleUpdateQuantity(item['Code Article'], item.scannedQuantity + 1)}
+                                                                onClick={() => handleUpdateQuantity(item['Réf. Article'], item.scannedQuantity + 1)}
                                                                 className="w-8 h-8 flex items-center justify-center rounded-lg bg-orange-500 text-white shadow-sm active:scale-95 transition-transform"
                                                             >
                                                                 +
@@ -645,7 +648,7 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
                                                     <div className="flex-1 z-10 w-full md:w-auto">
                                                         <div className="flex flex-wrap items-center gap-3 mb-1.5">
                                                             <div className="text-xs font-mono font-bold tracking-wider text-neutral-400 dark:text-neutral-500">
-                                                                {result['Code Article'] || 'N/A'}
+                                                                {result['Réf. Article'] || 'N/A'}
                                                             </div>
                                                             <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${getStockStatus(result.Existance).bg} ${getStockStatus(result.Existance).color}`}>
                                                                 {parseFloat(result.Existance?.replace(',', '.') || '0') > 0 ? <FaCircleCheck /> : <FaTriangleExclamation />}
@@ -664,7 +667,7 @@ const StockView: React.FC<StockViewProps> = ({ isDarkMode, isScrolled }) => {
                                                         <div className="flex flex-col items-start md:items-center justify-center">
                                                             <div className="text-[10px] font-tech tracking-[0.2em] uppercase text-neutral-500 mb-0.5">En Stock</div>
                                                             <div className={`text-2xl md:text-3xl font-tech font-bold tracking-tighter ${getStockStatus(result.Existance).color}`}>
-                                                                {result.Existance || '0'}
+                                                                {(!result.Existance || result.Existance.trim() === '') ? '0' : result.Existance}
                                                             </div>
                                                         </div>
 
