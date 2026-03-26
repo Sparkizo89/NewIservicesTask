@@ -121,11 +121,25 @@ const QualiReparForm: React.FC<QualiReparFormProps> = ({ onShowToast, userId }) 
 
     useEffect(() => {
         if (view === 'form') {
-            const timer = setTimeout(resizeCanvas, 100);
-            window.addEventListener("resize", resizeCanvas);
+            let observer: ResizeObserver;
+            // Delay slightly to ensure sigCanvas ref is populated
+            const timer = setTimeout(() => {
+                if (sigCanvas.current) {
+                    const parent = sigCanvas.current.getCanvas().parentElement;
+                    if (parent) {
+                        observer = new ResizeObserver(() => {
+                            if (parent.offsetWidth > 0) {
+                                resizeCanvas();
+                            }
+                        });
+                        observer.observe(parent);
+                    }
+                }
+            }, 50);
+
             return () => {
                 clearTimeout(timer);
-                window.removeEventListener("resize", resizeCanvas);
+                if (observer) observer.disconnect();
             };
         }
     }, [view]);
@@ -232,7 +246,7 @@ const QualiReparForm: React.FC<QualiReparFormProps> = ({ onShowToast, userId }) 
                 onShowToast('✅ Signature reçue !');
                 unsub();
                 // Clean up session document
-                deleteDoc(doc(db, 'signatureSessions', sessionId)).catch(() => {});
+                deleteDoc(doc(db, 'signatureSessions', sessionId)).catch(() => { });
             }
         });
     };
@@ -986,6 +1000,7 @@ const QualiReparForm: React.FC<QualiReparFormProps> = ({ onShowToast, userId }) 
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3, ease: "easeOut" }}
+                        onAnimationComplete={() => window.dispatchEvent(new Event('resize'))}
                         className="grid grid-cols-1 xl:grid-cols-12 gap-6"
                     >
 
@@ -1131,33 +1146,33 @@ const QualiReparForm: React.FC<QualiReparFormProps> = ({ onShowToast, userId }) 
                                         <FaSignature className="text-green-500 drop-shadow-[0_0_5px_rgba(34,197,94,0.4)]" />
                                         <h3 className="font-tech uppercase tracking-widest text-sm font-bold">Signature</h3>
                                     </div>
-                                     {/* QR Signature Button + Effacer */}
-                                     <div className="flex gap-2 items-center">
-                                         <button
-                                             onClick={handleOpenQR}
-                                             className={`text-[10px] uppercase font-bold flex items-center gap-1.5 transition-colors px-2 py-1 rounded-lg ${
-                                                 qrStatus === 'received'
-                                                     ? 'text-green-500 bg-green-500/10'
-                                                     : qrStatus === 'waiting'
-                                                     ? 'text-orange-400 bg-orange-500/10 animate-pulse'
-                                                     : 'text-neutral-500 hover:text-orange-500'
-                                             }`}
-                                         >
-                                             <FaQrcode /> {qrStatus === 'received' ? 'Reçue ✓' : qrStatus === 'waiting' ? 'En attente...' : 'QR Code'}
-                                         </button>
-                                         <button onClick={clearSignature} className="text-[10px] uppercase font-bold text-neutral-500 hover:text-red-500 flex items-center gap-1 transition-colors px-2">
-                                             <FaEraser /> Effacer
-                                         </button>
-                                     </div>
+                                    {/* QR Signature Button + Effacer */}
+                                    <div className="flex gap-2 items-center">
+                                        <button
+                                            onClick={handleOpenQR}
+                                            className={`text-[10px] uppercase font-bold flex items-center gap-1.5 transition-colors px-2 py-1 rounded-lg ${qrStatus === 'received'
+                                                ? 'text-green-500 bg-green-500/10'
+                                                : qrStatus === 'waiting'
+                                                    ? 'text-orange-400 bg-orange-500/10 animate-pulse'
+                                                    : 'text-neutral-500 hover:text-orange-500'
+                                                }`}
+                                        >
+                                            <FaQrcode /> {qrStatus === 'received' ? 'Reçue ✓' : qrStatus === 'waiting' ? 'En attente...' : 'QR Code'}
+                                        </button>
+                                        <button onClick={clearSignature} className="text-[10px] uppercase font-bold text-neutral-500 hover:text-red-500 flex items-center gap-1 transition-colors px-2">
+                                            <FaEraser /> Effacer
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="border border-dashed dark:border-white/20 border-black/20 rounded-xl bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-sm relative overflow-hidden hover:border-black/40 dark:hover:border-white/40 transition-colors h-80 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
                                     <SignatureCanvas
                                         ref={sigCanvas}
-                                        penColor="currentColor"
-                                        canvasProps={{ className: 'w-full h-full block dark:text-white text-black' }}
+                                        penColor={document.documentElement.classList.contains('dark') ? 'white' : 'black'}
+                                        canvasProps={{ width: 800, height: 320, className: 'w-full h-full cursor-crosshair print:invert-0 dark:print:invert touch-none' }}
                                         backgroundColor="transparent"
                                         clearOnResize={false}
+                                        onEnd={() => { }}
                                     />
                                     <div className="absolute bottom-2 right-2 pointer-events-none text-[10px] text-neutral-400 font-mono select-none drop-shadow-sm">
                                         ZONE DE SIGNATURE

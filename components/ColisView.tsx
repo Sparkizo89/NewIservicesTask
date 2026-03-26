@@ -7,7 +7,7 @@ import { GoogleGenAI } from '@google/genai';
 import { FaBox, FaUpload, FaCamera, FaCircleCheck, FaTriangleExclamation, FaTrash, FaMagnifyingGlass, FaBarcode, FaRotate } from 'react-icons/fa6';
 
 interface StockItem {
-    'Réf. Article': string;
+    'Code Article': string;
     'Description': string;
     'Code à Barres'?: string;
     'Prix Unitaire'?: string;
@@ -32,7 +32,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
     const [expectedItems, setExpectedItems] = useState<ColisItem[]>(() => {
         const saved = localStorage.getItem('colis_expected_items');
         if (saved) {
-            try { return JSON.parse(saved); } catch (e) {}
+            try { return JSON.parse(saved); } catch (e) { }
         }
         return [];
     });
@@ -45,7 +45,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [isScanningStatus, setIsScanningStatus] = useState(false);
     const [barcodeInput, setBarcodeInput] = useState('');
-    
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const barcodeInputRef = useRef<HTMLInputElement>(null);
 
@@ -82,14 +82,14 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
     const processExtractedData = (items: Array<{ reference: string, description: string, quantity: number }>) => {
         const mergedItems: ColisItem[] = items.map(extracted => {
             // Find in inventory to get the exact barcode
-            const match = inventory.find(inv => 
-                inv['Réf. Article']?.toLowerCase() === extracted.reference.toLowerCase() ||
+            const match = inventory.find(inv =>
+                inv['Code Article']?.toLowerCase() === extracted.reference.toLowerCase() ||
                 inv['Code à Barres']?.toLowerCase() === extracted.reference.toLowerCase()
             );
 
             return {
-                id: match?.['Code à Barres'] || match?.['Réf. Article'] || extracted.reference,
-                reference: match?.['Réf. Article'] || extracted.reference,
+                id: match?.['Code à Barres'] || match?.['Code Article'] || extracted.reference,
+                reference: match?.['Code Article'] || extracted.reference,
                 description: match?.['Description'] || extracted.description,
                 barcode: match?.['Code à Barres'],
                 expectedQuantity: extracted.quantity,
@@ -140,7 +140,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 const data = XLSX.utils.sheet_to_json(worksheet) as any[];
-                
+
                 const items = data.map((row: any) => ({
                     reference: row['Reference'] || row['Réf. Article'] || row['Code'] || '',
                     description: row['Description'] || row['Nom'] || '',
@@ -151,11 +151,11 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                 // Image Processing with Gemini (Supports Multiple Files)
                 const files = Array.from(e.target.files || []);
                 const imageFiles = files.filter(f => f.type.startsWith('image/'));
-                
+
                 if (imageFiles.length === 0) {
-                     alert("Format non supporté. Veuillez utiliser CSV, Excel ou Image.");
-                     setIsUploading(false);
-                     return;
+                    alert("Format non supporté. Veuillez utiliser CSV, Excel ou Image.");
+                    setIsUploading(false);
+                    return;
                 }
 
                 try {
@@ -191,7 +191,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                             }
                         ]
                     });
-                    
+
                     let text = response.text || "[]";
                     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
                     const items = JSON.parse(text);
@@ -210,7 +210,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
             alert("Erreur lors du traitement du fichier.");
             setIsUploading(false);
         }
-        
+
         // Reset input
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
@@ -222,9 +222,9 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
 
         setExpectedItems(prev => {
             // Find existing matching item
-            const matchIndex = prev.findIndex(p => 
-                p.id.toLowerCase() === scannedCode || 
-                p.barcode?.toLowerCase() === scannedCode || 
+            const matchIndex = prev.findIndex(p =>
+                p.id.toLowerCase() === scannedCode ||
+                p.barcode?.toLowerCase() === scannedCode ||
                 p.reference.toLowerCase() === scannedCode
             );
 
@@ -236,14 +236,14 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
             } else {
                 // Item not found in expected list => It's an extra item!
                 // Try to identify it from the general inventory
-                const invMatch = inventory.find(inv => 
-                    inv['Code à Barres']?.toLowerCase() === scannedCode || 
-                    inv['Réf. Article']?.toLowerCase() === scannedCode
+                const invMatch = inventory.find(inv =>
+                    inv['Code à Barres']?.toLowerCase() === scannedCode ||
+                    inv['Code Article']?.toLowerCase() === scannedCode
                 );
 
                 const newItem: ColisItem = {
-                    id: invMatch?.['Code à Barres'] || invMatch?.['Réf. Article'] || scannedCode,
-                    reference: invMatch?.['Réf. Article'] || scannedCode,
+                    id: invMatch?.['Code à Barres'] || invMatch?.['Code Article'] || scannedCode,
+                    reference: invMatch?.['Code Article'] || scannedCode,
                     description: invMatch?.['Description'] || 'Article Inconnu (Hors Liste)',
                     barcode: invMatch?.['Code à Barres'] || scannedCode,
                     expectedQuantity: 0, // 0 expected means it's an Extra
@@ -256,7 +256,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
 
     const handleUpdateScannedQuantity = (id: string, newQuantity: number) => {
         if (newQuantity < 0) return;
-        setExpectedItems(prev => prev.map(item => 
+        setExpectedItems(prev => prev.map(item =>
             item.id === id ? { ...item, scannedQuantity: newQuantity } : item
         ));
     };
@@ -270,7 +270,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                 return prev.filter(p => p.id !== id);
             }
             // If it's an expected item, just reset its scanned quantity to 0
-            return prev.map(p => 
+            return prev.map(p =>
                 p.id === id ? { ...item, scannedQuantity: 0 } : p
             );
         });
@@ -307,7 +307,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
     // Computed Stats
     const totalExpected = expectedItems.reduce((acc, item) => acc + item.expectedQuantity, 0);
     const totalScanned = expectedItems.reduce((acc, item) => acc + item.scannedQuantity, 0);
-    
+
     // Categorize Items for Display
     const missingItems = expectedItems.filter(i => i.scannedQuantity < i.expectedQuantity);
     const validatedItems = expectedItems.filter(i => i.expectedQuantity > 0 && i.scannedQuantity === i.expectedQuantity);
@@ -332,15 +332,15 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                 </div>
 
                 <div className="flex gap-3">
-                    <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        onChange={handleFileUpload} 
-                        className="hidden" 
-                        multiple 
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        multiple
                         accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, image/*"
                     />
-                    <button 
+                    <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
                         className="flex items-center gap-2 px-5 py-3 rounded-[20px] bg-white/40 dark:bg-[#1a1a1a]/40 backdrop-blur-xl border border-black/10 dark:border-white/10 hover:border-orange-500 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_2px_10px_rgba(0,0,0,0.05)] text-sm font-bold uppercase tracking-widest transition-all text-neutral-600 dark:text-neutral-300 group"
@@ -349,9 +349,9 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                         <span>Importer</span>
                     </button>
                     {expectedItems.length > 0 && (
-                        <button 
+                        <button
                             onClick={() => {
-                                if(confirm("Voulez-vous vraiment effacer la liste en cours ?")) {
+                                if (confirm("Voulez-vous vraiment effacer la liste en cours ?")) {
                                     setExpectedItems([]);
                                 }
                             }}
@@ -367,7 +367,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
             <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
                 {/* Left Panel: Scanner & Progress */}
                 <div className="w-full lg:w-[400px] flex flex-col gap-6 shrink-0 h-full overflow-y-auto custom-scrollbar">
-                    
+
                     {/* Progress Summary Card */}
                     <div className="dark:bg-[#1a1a1a]/40 bg-white/40 backdrop-blur-xl rounded-[32px] border dark:border-white/10 border-black/10 p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.1)] transition-colors">
                         <h3 className="font-tech text-neutral-500 uppercase tracking-widest text-xs mb-4">Progression du colis</h3>
@@ -375,9 +375,9 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                             <span className="text-5xl font-tech font-bold dark:text-white text-black leading-none">{totalScanned}</span>
                             <span className="text-xl text-neutral-400 font-tech mb-1">/ {totalExpected}</span>
                         </div>
-                        
+
                         <div className="w-full h-2 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden mt-4">
-                            <div 
+                            <div
                                 className="h-full bg-orange-500 transition-all duration-500"
                                 style={{ width: `${Math.min(100, totalExpected === 0 ? 0 : (totalScanned / totalExpected) * 100)}%` }}
                             ></div>
@@ -402,12 +402,12 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                     {/* Scanner Input Panel */}
                     <div className="dark:bg-[#1a1a1a]/40 bg-white/40 backdrop-blur-xl rounded-[32px] border dark:border-white/10 border-black/10 p-6 flex flex-col gap-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),_0_8px_32px_rgba(0,0,0,0.1)] transition-colors">
                         <h3 className="font-tech text-neutral-500 uppercase tracking-widest text-xs">Pointage Manuel</h3>
-                        
+
                         <form onSubmit={onPhysicalScanSubmit} className="relative">
                             <FaBarcode className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 text-lg" />
-                            <input 
+                            <input
                                 ref={barcodeInputRef}
-                                type="text" 
+                                type="text"
                                 value={barcodeInput}
                                 onChange={(e) => setBarcodeInput(e.target.value)}
                                 placeholder="Douchette (Scan direct)"
@@ -424,7 +424,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                             </div>
                         </div>
 
-                        <button 
+                        <button
                             onClick={() => setIsScanningStatus(!isScanningStatus)}
                             className={`flex items-center justify-center gap-2 py-4 rounded-[20px] font-tech tracking-widest text-sm uppercase transition-all shadow-md ${isScanningStatus ? 'bg-red-500 text-white' : 'bg-neutral-800 text-white hover:bg-neutral-700 dark:bg-white dark:text-black dark:hover:bg-neutral-200'}`}
                         >
@@ -456,7 +456,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                                     <div className="grid gap-2">
                                         <AnimatePresence>
                                             {missingItems.map(item => (
-                                                <motion.div 
+                                                <motion.div
                                                     key={item.id}
                                                     layout
                                                     initial={{ opacity: 0, y: 10 }}
@@ -473,7 +473,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                                                     </div>
                                                     <div className="flex items-center gap-2 shrink-0">
                                                         {item.scannedQuantity > 0 && (
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleRemoveScannedItem(item.id)}
                                                                 className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-100 dark:bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
                                                             >
@@ -481,7 +481,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                                                             </button>
                                                         )}
                                                         <div className="flex items-center gap-1 bg-red-500/10 p-1 rounded-xl border border-red-500/20">
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleUpdateScannedQuantity(item.id, item.scannedQuantity - 1)}
                                                                 disabled={item.scannedQuantity === 0}
                                                                 className="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-[#222] text-black dark:text-white shadow-sm active:scale-95 transition-transform disabled:opacity-50"
@@ -490,7 +490,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                                                                 <span className="text-red-500 font-bold font-tech text-lg">{item.scannedQuantity}</span>
                                                                 <span className="text-red-400 font-tech text-xs">/ {item.expectedQuantity}</span>
                                                             </div>
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleUpdateScannedQuantity(item.id, item.scannedQuantity + 1)}
                                                                 className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-500 text-white shadow-sm active:scale-95 transition-transform"
                                                             >+</button>
@@ -512,7 +512,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                                     <div className="grid gap-2">
                                         <AnimatePresence>
                                             {extraItems.map(item => (
-                                                <motion.div 
+                                                <motion.div
                                                     key={`extra-${item.id}`}
                                                     layout
                                                     initial={{ opacity: 0, y: 10 }}
@@ -527,14 +527,14 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-2 shrink-0">
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleRemoveScannedItem(item.id)}
                                                             className="w-8 h-8 flex items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-500/20 text-orange-600 hover:bg-orange-500 hover:text-white transition-colors"
                                                         >
                                                             <FaTrash className="text-xs" />
                                                         </button>
                                                         <div className="flex items-center gap-1 bg-orange-500/10 p-1 rounded-xl border border-orange-500/20">
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleUpdateScannedQuantity(item.id, item.scannedQuantity - 1)}
                                                                 className="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-[#222] text-black dark:text-white shadow-sm active:scale-95 transition-transform"
                                                             >-</button>
@@ -542,7 +542,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                                                                 <span className="font-bold font-tech text-lg text-orange-600 dark:text-orange-400">+{item.scannedQuantity - item.expectedQuantity}</span>
                                                                 {item.expectedQuantity > 0 && <span className="text-orange-400 font-tech text-xs ml-1">/ {item.expectedQuantity}</span>}
                                                             </div>
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleUpdateScannedQuantity(item.id, item.scannedQuantity + 1)}
                                                                 className="w-7 h-7 flex items-center justify-center rounded-lg bg-orange-500 text-white shadow-sm active:scale-95 transition-transform"
                                                             >+</button>
@@ -564,7 +564,7 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                                     <div className="grid gap-2 opacity-60 hover:opacity-100 transition-opacity">
                                         <AnimatePresence>
                                             {validatedItems.map(item => (
-                                                <motion.div 
+                                                <motion.div
                                                     key={`val-${item.id}`}
                                                     layout
                                                     initial={{ opacity: 0, y: 10 }}
@@ -576,14 +576,14 @@ const ColisView: React.FC<ColisViewProps> = ({ isDarkMode, isScrolled }) => {
                                                     </div>
                                                     <div className="flex items-center gap-3 shrink-0">
                                                         <div className="flex items-center gap-1 bg-green-500/10 p-1 rounded-xl border border-green-500/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleUpdateScannedQuantity(item.id, item.scannedQuantity - 1)}
                                                                 className="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-[#222] text-black dark:text-white shadow-sm active:scale-95 transition-transform"
                                                             >-</button>
                                                             <div className="flex items-baseline gap-1 px-2 min-w-[2rem] justify-center text-center">
                                                                 <span className="text-green-600 dark:text-green-400 font-bold font-tech text-sm">{item.scannedQuantity}</span>
                                                             </div>
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleUpdateScannedQuantity(item.id, item.scannedQuantity + 1)}
                                                                 className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-500 text-white shadow-sm active:scale-95 transition-transform"
                                                             >+</button>
